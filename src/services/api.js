@@ -234,6 +234,31 @@ export const authAPI = {
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
   },
+  getToken: () => {
+    return localStorage.getItem('token');
+  },
+  
+  getCurrentUser: () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  },
+  
+  isAuthenticated: () => {
+    const token = localStorage.getItem('token');
+    return !!token;
+  },
+  
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
 };
 
 export default api;

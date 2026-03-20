@@ -3,12 +3,17 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { propertyAPI } from '../services/api';
 import PropertyList from '../components/PropertyList';
-import { HiPlus, HiHome, HiPhotograph, HiUsers, HiOfficeBuilding } from 'react-icons/hi';
+import { 
+  HiPlus, HiHome, HiPhotograph, HiUsers, HiOfficeBuilding,
+  HiChartBar, HiTrendingUp, HiTrendingDown, HiRefresh,
+  HiOutlineSearch, HiFilter, HiX
+} from 'react-icons/hi';
 
 const Dashboard = () => {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Separate filters for status and type
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
@@ -29,7 +34,7 @@ const Dashboard = () => {
   // Apply filters whenever properties or filters change
   useEffect(() => {
     applyFilters();
-  }, [properties, statusFilter, typeFilter]);
+  }, [properties, statusFilter, typeFilter, searchTerm]);
 
   const fetchProperties = async () => {
     try {
@@ -56,6 +61,17 @@ const Dashboard = () => {
   const applyFilters = () => {
     let filtered = [...properties];
     
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.address?.toLowerCase().includes(searchLower) ||
+        p.city?.toLowerCase().includes(searchLower) ||
+        p.state?.toLowerCase().includes(searchLower) ||
+        p.sector?.name?.toLowerCase().includes(searchLower)
+      );
+    }
+    
     // Apply status filter (all, active, inactive)
     if (statusFilter !== 'all') {
       if (statusFilter === 'active') {
@@ -74,12 +90,10 @@ const Dashboard = () => {
   };
 
   const handleStatusFilter = (status) => {
-    // Toggle: if same status clicked, set to 'all', otherwise set to that status
     setStatusFilter(prev => prev === status ? 'all' : status);
   };
 
   const handleTypeFilter = (type) => {
-    // Toggle: if same type clicked, set to 'all', otherwise set to that type
     setTypeFilter(prev => prev === type ? 'all' : type);
   };
 
@@ -91,7 +105,7 @@ const Dashboard = () => {
     try {
       await propertyAPI.delete(id);
       toast.success('Property deleted successfully');
-      fetchProperties(); // Refresh list
+      fetchProperties();
     } catch (error) {
       console.error('Error deleting property:', error);
       toast.error('Failed to delete property');
@@ -101,206 +115,309 @@ const Dashboard = () => {
   const clearAllFilters = () => {
     setStatusFilter('all');
     setTypeFilter('all');
+    setSearchTerm('');
   };
 
   const getFilterTitle = () => {
-    const statusText = statusFilter === 'all' ? '' : `${statusFilter} ${typeFilter === 'all' ? 'Properties' : ''}`;
-    const typeText = typeFilter === 'all' ? '' : `${typeFilter.toUpperCase()} Properties`;
-    const connector = statusFilter !== 'all' && typeFilter !== 'all' ? ' ' : '';
+    const statusText = statusFilter === 'all' ? '' : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}`;
+    const typeText = typeFilter === 'all' ? '' : `${typeFilter.toUpperCase()}`;
     
-    if (statusFilter !== 'all' && typeFilter !== 'all') {
-      return `${statusFilter} ${typeFilter.toUpperCase()} Properties`;
+    if (searchTerm) {
+      return `Search Results for "${searchTerm}"`;
+    } else if (statusFilter !== 'all' && typeFilter !== 'all') {
+      return `${statusText} ${typeText} Properties`;
     } else if (statusFilter !== 'all') {
-      return `${statusFilter} Properties`;
+      return `${statusText} Properties`;
     } else if (typeFilter !== 'all') {
-      return `${typeFilter.toUpperCase()} Properties`;
+      return `${typeText} Properties`;
     } else {
       return 'All Properties';
     }
   };
 
-  const isFilterActive = statusFilter !== 'all' || typeFilter !== 'all';
+  const isFilterActive = statusFilter !== 'all' || typeFilter !== 'all' || searchTerm !== '';
+
+  const activePercentage = stats.total > 0 ? ((stats.active / stats.total) * 100).toFixed(0) : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Property Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage your properties efficiently</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Property Dashboard
+            </h1>
+            <p className="text-gray-600 mt-1">Manage your properties efficiently</p>
+          </div>
+          <Link
+            to="/properties/add"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg"
+          >
+            <HiPlus className="text-xl" />
+            <span>Add New Property</span>
+          </Link>
         </div>
-        <Link
-          to="/properties/add"
-          className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg"
-        >
-          <HiPlus className="text-xl" />
-          <span>Add New Property</span>
-        </Link>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">Status Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Properties - Always shows all */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Total Properties</p>
-                <p className="text-3xl font-bold text-gray-800 mt-2">{stats.total}</p>
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by address, city, state, sector..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <HiX className="text-lg" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="mb-8">
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Total Properties</p>
+                  <p className="text-3xl font-bold text-gray-800 mt-1">{stats.total}</p>
+                </div>
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl">
+                  <HiHome className="text-2xl text-white" />
+                </div>
               </div>
-              <div className="bg-blue-500 p-4 rounded-full text-white">
-                <HiHome className="text-2xl" />
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Active Properties</p>
+                  <p className="text-3xl font-bold text-green-600 mt-1">{stats.active}</p>
+                </div>
+                <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-xl">
+                  <HiTrendingUp className="text-2xl text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Inactive Properties</p>
+                  <p className="text-3xl font-bold text-red-600 mt-1">{stats.inactive}</p>
+                </div>
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-xl">
+                  <HiTrendingDown className="text-2xl text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Occupancy Rate</p>
+                  <p className="text-3xl font-bold text-purple-600 mt-1">{activePercentage}%</p>
+                </div>
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
+                  <HiChartBar className="text-2xl text-white" />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Active Properties - Clickable */}
-          <button
-            onClick={() => handleStatusFilter('active')}
-            className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer w-full text-left ${
-              statusFilter === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Active Properties</p>
-                <p className="text-3xl font-bold text-gray-800 mt-2">{stats.active}</p>
+          {/* Status Filters */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <HiFilter className="text-blue-600" />
+              Status Filters
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Total Properties - Always shows all */}
+              <div className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg ${
+                statusFilter === 'all' && !typeFilter !== 'all' ? 'ring-2 ring-blue-500' : ''
+              }`}
+              onClick={() => handleStatusFilter('all')}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">All Properties</p>
+                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</p>
+                  </div>
+                  <div className="bg-gray-500 p-3 rounded-xl">
+                    <HiHome className="text-xl text-white" />
+                  </div>
+                </div>
+                {statusFilter === 'all' && (
+                  <div className="mt-2 text-xs text-blue-600 font-semibold">✓ Current Filter</div>
+                )}
               </div>
-              <div className="bg-green-500 p-4 rounded-full text-white">
-                <HiPhotograph className="text-2xl" />
+
+              {/* Active Properties - Clickable */}
+              <div
+                onClick={() => handleStatusFilter('active')}
+                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                  statusFilter === 'active' ? 'ring-2 ring-green-500 shadow-lg' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">Active Properties</p>
+                    <p className="text-2xl font-bold text-green-600 mt-1">{stats.active}</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-xl">
+                    <HiPhotograph className="text-xl text-white" />
+                  </div>
+                </div>
+                {statusFilter === 'active' && (
+                  <div className="mt-2 text-xs text-green-600 font-semibold">✓ Selected</div>
+                )}
+              </div>
+
+              {/* Inactive Properties - Clickable */}
+              <div
+                onClick={() => handleStatusFilter('inactive')}
+                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                  statusFilter === 'inactive' ? 'ring-2 ring-red-500 shadow-lg' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">Inactive Properties</p>
+                    <p className="text-2xl font-bold text-red-600 mt-1">{stats.inactive}</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-xl">
+                    <HiOfficeBuilding className="text-xl text-white" />
+                  </div>
+                </div>
+                {statusFilter === 'inactive' && (
+                  <div className="mt-2 text-xs text-red-600 font-semibold">✓ Selected</div>
+                )}
               </div>
             </div>
-            {statusFilter === 'active' && (
-              <div className="mt-2 text-xs text-green-600 font-semibold">
-                ✓ Selected
-              </div>
-            )}
-          </button>
+          </div>
 
-          {/* Inactive Properties - Clickable */}
-          <button
-            onClick={() => handleStatusFilter('inactive')}
-            className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer w-full text-left ${
-              statusFilter === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Inactive Properties</p>
-                <p className="text-3xl font-bold text-gray-800 mt-2">{stats.inactive}</p>
-              </div>
-              <div className="bg-red-500 p-4 rounded-full text-white">
-                <HiOfficeBuilding className="text-2xl" />
-              </div>
-            </div>
-            {statusFilter === 'inactive' && (
-              <div className="mt-2 text-xs text-red-600 font-semibold">
-                ✓ Selected
-              </div>
-            )}
-          </button>
-        </div>
-
-        <h2 className="text-lg font-semibold text-gray-700 mt-6 mb-3">Type Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* PG Properties - Clickable */}
-          <button
-            onClick={() => handleTypeFilter('pg')}
-            className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer w-full text-left ${
-              typeFilter === 'pg' ? 'ring-2 ring-purple-500 ring-offset-2' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">PG Properties</p>
-                <p className="text-3xl font-bold text-gray-800 mt-2">{stats.pg}</p>
-              </div>
-              <div className="bg-purple-500 p-4 rounded-full text-white">
-                <HiUsers className="text-2xl" />
-              </div>
-            </div>
-            {typeFilter === 'pg' && (
-              <div className="mt-2 text-xs text-purple-600 font-semibold">
-                ✓ Selected
-              </div>
-            )}
-          </button>
-
-          {/* Room Properties - Clickable */}
-          <button
-            onClick={() => handleTypeFilter('room')}
-            className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer w-full text-left ${
-              typeFilter === 'room' ? 'ring-2 ring-orange-500 ring-offset-2' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Room Properties</p>
-                <p className="text-3xl font-bold text-gray-800 mt-2">{stats.room}</p>
-              </div>
-              <div className="bg-orange-500 p-4 rounded-full text-white">
-                <HiHome className="text-2xl" />
-              </div>
-            </div>
-            {typeFilter === 'room' && (
-              <div className="mt-2 text-xs text-orange-600 font-semibold">
-                ✓ Selected
-              </div>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Properties List */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+          {/* Type Filters */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">{getFilterTitle()}</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Showing {filteredProperties.length} of {properties.length} properties
-            </p>
+            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <HiOfficeBuilding className="text-blue-600" />
+              Property Type Filters
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* PG Properties - Clickable */}
+              <div
+                onClick={() => handleTypeFilter('pg')}
+                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                  typeFilter === 'pg' ? 'ring-2 ring-purple-500 shadow-lg' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">PG Properties</p>
+                    <p className="text-2xl font-bold text-purple-600 mt-1">{stats.pg}</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
+                    <HiUsers className="text-xl text-white" />
+                  </div>
+                </div>
+                {typeFilter === 'pg' && (
+                  <div className="mt-2 text-xs text-purple-600 font-semibold">✓ Selected</div>
+                )}
+              </div>
+
+              {/* Room Properties - Clickable */}
+              <div
+                onClick={() => handleTypeFilter('room')}
+                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                  typeFilter === 'room' ? 'ring-2 ring-orange-500 shadow-lg' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">Room Properties</p>
+                    <p className="text-2xl font-bold text-orange-600 mt-1">{stats.room}</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-3 rounded-xl">
+                    <HiHome className="text-xl text-white" />
+                  </div>
+                </div>
+                {typeFilter === 'room' && (
+                  <div className="mt-2 text-xs text-orange-600 font-semibold">✓ Selected</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Properties List */}
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">{getFilterTitle()}</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Showing {filteredProperties.length} of {properties.length} properties
+                {searchTerm && ` matching "${searchTerm}"`}
+              </p>
+            </div>
+            
+            {/* Filter Chips */}
+            <div className="flex flex-wrap gap-2">
+              {statusFilter !== 'all' && (
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className="px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-sm hover:bg-green-100 flex items-center gap-1 transition-all"
+                >
+                  <span>Status: {statusFilter}</span>
+                  <span className="text-lg ml-1">&times;</span>
+                </button>
+              )}
+              
+              {typeFilter !== 'all' && (
+                <button
+                  onClick={() => setTypeFilter('all')}
+                  className="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full text-sm hover:bg-purple-100 flex items-center gap-1 transition-all"
+                >
+                  <span>Type: {typeFilter.toUpperCase()}</span>
+                  <span className="text-lg ml-1">&times;</span>
+                </button>
+              )}
+              
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 flex items-center gap-1 transition-all"
+                >
+                  <span>Search: {searchTerm}</span>
+                  <span className="text-lg ml-1">&times;</span>
+                </button>
+              )}
+              
+              {isFilterActive && (
+                <button
+                  onClick={clearAllFilters}
+                  className="px-3 py-1.5 bg-red-50 text-red-600 rounded-full text-sm hover:bg-red-100 flex items-center gap-1 transition-all"
+                >
+                  <HiX className="text-sm" />
+                  Clear All
+                </button>
+              )}
+            </div>
           </div>
           
-          {/* Filter Chips */}
-          <div className="flex gap-2">
-            {statusFilter !== 'all' && (
-              <button
-                onClick={() => setStatusFilter('all')}
-                className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200 flex items-center gap-1"
-              >
-                Status: {statusFilter}
-                <span className="text-lg ml-1">&times;</span>
-              </button>
-            )}
-            
-            {typeFilter !== 'all' && (
-              <button
-                onClick={() => setTypeFilter('all')}
-                className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200 flex items-center gap-1"
-              >
-                Type: {typeFilter.toUpperCase()}
-                <span className="text-lg ml-1">&times;</span>
-              </button>
-            )}
-            
-            {isFilterActive && (
-              <button
-                onClick={clearAllFilters}
-                className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm hover:bg-red-200 flex items-center gap-1"
-              >
-                Clear All
-              </button>
-            )}
-          </div>
+          <PropertyList 
+            properties={filteredProperties} 
+            loading={loading} 
+            onDelete={handleDelete}
+            onRefresh={fetchProperties}
+          />
         </div>
-        
-        <PropertyList 
-          properties={filteredProperties} 
-          loading={loading} 
-          onDelete={handleDelete}
-          onRefresh={fetchProperties}
-        />
       </div>
     </div>
   );
