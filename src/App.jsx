@@ -6,7 +6,8 @@ import AddProperty from './pages/AddProperty';
 import EditProperty from './pages/EditProperty';
 import PropertyDetails from './pages/PropertyDetails';
 import SectorManagement from './pages/SectorManagement';
-
+import UserProperties from './pages/UserProperties';
+import AuthPage from './pages/AuthPage';
 function App() {
   return (
     <Router>
@@ -33,12 +34,16 @@ function App() {
         />
         
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* <Route path="/" element={<Navigate to="/dashboard" replace />} /> */}
+          <Route path="/" element={<UserProperties />} />
+          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
           <Route path="/admindashboard" element={<Dashboard />} />
           <Route path="/properties/add" element={<AddProperty />} />
           <Route path="/properties/edit/:id" element={<EditProperty />} />
           <Route path="/properties/:id" element={<PropertyDetails />} />
           <Route path="/sectors" element={<SectorManagement />} />
+          <Route path="/properties" element={<UserProperties />} />
+          <Route path="/login" element={<AuthPage />} />
         </Routes>
       </div>
     </Router>

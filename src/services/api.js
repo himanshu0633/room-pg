@@ -137,4 +137,103 @@ export const sectorAPI = {
     return response.data;
   },
 };
+export const userAPI = {
+  // Get all properties for users
+  getAllProperties: async (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) params.append(key, filters[key]);
+    });
+    const response = await api.get(`/properties?${params.toString()}`);
+    return response.data;
+  },
+
+  // Get single property
+  getPropertyById: async (id) => {
+    const response = await api.get(`/properties/${id}`);
+    return response.data;
+  },
+
+  // Bookings
+  createBooking: async (data) => {
+    const response = await api.post('/bookings', data);
+    return response.data;
+  },
+
+  getMyBookings: async () => {
+    const response = await api.get('/bookings/my-bookings');
+    return response.data;
+  },
+
+  cancelBooking: async (id) => {
+    const response = await api.put(`/bookings/${id}/cancel`);
+    return response.data;
+  },
+
+  // Saved Properties
+  toggleSaveProperty: async (propertyId, notes = '') => {
+    const response = await api.post('/saved-properties', { propertyId, notes });
+    return response.data;
+  },
+
+  getMySavedProperties: async () => {
+    const response = await api.get('/saved-properties/my-saved');
+    return response.data;
+  },
+
+  checkSavedStatus: async (propertyId) => {
+    const response = await api.get(`/saved-properties/check/${propertyId}`);
+    return response.data;
+  },
+};
+export const authAPI = {
+  // Register user
+  register: async (formData) => {
+    const response = await axios.post(`${API_URL}/auth/register`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Login user
+  login: async (data) => {
+    const response = await api.post('/auth/login', data);
+    return response.data;
+  },
+
+  // Verify OTP
+  verifyOTP: async (data) => {
+    const response = await api.post('/auth/verify-otp', data);
+    return response.data;
+  },
+
+  // Resend OTP
+  resendOTP: async (data) => {
+    const response = await api.post('/auth/resend-otp', data);
+    return response.data;
+  },
+
+  // Logout
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+
+  // Get current user
+  getCurrentUser: () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      return JSON.parse(userStr);
+    }
+    return null;
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
+  },
+};
+
 export default api;
