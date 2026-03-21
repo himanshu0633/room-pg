@@ -100,6 +100,8 @@ export const propertyAPI = {
     }
   },
 };
+
+// Sector APIs
 export const sectorAPI = {
   // Get all sectors
   getAll: async () => {
@@ -137,6 +139,8 @@ export const sectorAPI = {
     return response.data;
   },
 };
+
+// User APIs (for authenticated users)
 export const userAPI = {
   // Get all properties for users
   getAllProperties: async (filters = {}) => {
@@ -154,7 +158,7 @@ export const userAPI = {
     return response.data;
   },
 
-  // Bookings
+  // Bookings with duration support
   createBooking: async (data) => {
     const response = await api.post('/bookings', data);
     return response.data;
@@ -185,7 +189,31 @@ export const userAPI = {
     const response = await api.get(`/saved-properties/check/${propertyId}`);
     return response.data;
   },
+
+  // Admin methods
+  getAllBookings: async () => {
+    const response = await api.get('/bookings/all');
+    return response.data;
+  },
+
+  getAllSavedProperties: async () => {
+    const response = await api.get('/saved-properties/all');
+    return response.data;
+  },
+
+  updateBookingStatus: async (bookingId, data) => {
+    const response = await api.put(`/bookings/${bookingId}/status`, data);
+    return response.data;
+  },
+
+  // Get dashboard stats for admin
+  getDashboardStats: async () => {
+    const response = await api.get('/admin/stats');
+    return response.data;
+  },
 };
+
+// Auth APIs
 export const authAPI = {
   // Register user
   register: async (formData) => {
@@ -215,29 +243,7 @@ export const authAPI = {
     return response.data;
   },
 
-  // Logout
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
   // Get current user
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      return JSON.parse(userStr);
-    }
-    return null;
-  },
-
-  // Check if user is authenticated
-  isAuthenticated: () => {
-    return !!localStorage.getItem('token');
-  },
-  getToken: () => {
-    return localStorage.getItem('token');
-  },
-  
   getCurrentUser: () => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -249,16 +255,29 @@ export const authAPI = {
     }
     return null;
   },
-  
+
+  // Get token
+  getToken: () => {
+    return localStorage.getItem('token');
+  },
+
+  // Check if user is authenticated
   isAuthenticated: () => {
     const token = localStorage.getItem('token');
     return !!token;
   },
-  
+
+  // Check if user is admin
+  isAdmin: () => {
+    const user = authAPI.getCurrentUser();
+    return user?.role === 'admin';
+  },
+
+  // Logout
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-  }
+  },
 };
 
 export default api;

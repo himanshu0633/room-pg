@@ -4,7 +4,7 @@ import {
   HiHeart, HiOutlineHeart, HiCalendar, HiLocationMarker, 
   HiCurrencyRupee, HiCheckCircle, HiHome, HiOfficeBuilding,
   HiStar, HiPhone, HiMail, HiClock, HiArrowRight, HiX,
-  HiExclamationCircle
+  HiExclamationCircle, HiInformationCircle
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -26,21 +26,86 @@ const UserPropertyCard = ({
   const [pendingAction, setPendingAction] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
   const [bookingData, setBookingData] = useState({
-    visitDate: '',
+    duration: '',
+    durationType: '',
+    startDate: '',
     notes: ''
   });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [images, setImages] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [pricePerUnit, setPricePerUnit] = useState(0);
 
   const baseURL = import.meta.env.VITE_API_URL_IMG || 'http://localhost:4000';
 
-  // Check if user is logged in
+  // Check if user is logged in from localStorage
   const isLoggedIn = () => {
     if (propIsLoggedIn !== undefined) return propIsLoggedIn;
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
-    return token && user;
+    return !!(token && user);
   };
+
+  // Determine booking type based on property type
+  const getBookingType = () => {
+    if (property.propertyType === 'pg') {
+      return 'months';
+    } else if (property.propertyType === 'room') {
+      return 'days';
+    }
+    return 'months';
+  };
+
+  // Get price per unit based on property type
+  const getPricePerUnit = () => {
+    if (property.propertyType === 'pg') {
+      return property.mrp; // Monthly price
+    } else if (property.propertyType === 'room') {
+      return Math.round(property.mrp / 30); // Daily price
+    }
+    return property.mrp;
+  };
+
+  // Get daily rate for room
+  const getDailyRate = () => {
+    if (property.propertyType === 'room') {
+      return Math.round(property.mrp / 30);
+    }
+    return null;
+  };
+
+  // Calculate total amount when duration changes
+  useEffect(() => {
+    if (bookingData.duration && property.mrp) {
+      let amount = 0;
+      const durationType = bookingData.durationType || getBookingType();
+      const perUnitPrice = getPricePerUnit();
+      
+      if (durationType === 'months') {
+        amount = property.mrp * Number(bookingData.duration);
+      } else {
+        amount = perUnitPrice * Number(bookingData.duration);
+      }
+      setTotalAmount(Math.round(amount));
+      setPricePerUnit(perUnitPrice);
+    } else {
+      setTotalAmount(0);
+    }
+  }, [bookingData.duration, bookingData.durationType, property.mrp, property.propertyType]);
+
+  // Reset booking data when modal opens
+  useEffect(() => {
+    if (showBookingModal) {
+      const defaultDurationType = getBookingType();
+      setBookingData({
+        duration: '',
+        durationType: defaultDurationType,
+        startDate: '',
+        notes: ''
+      });
+      setTotalAmount(0);
+    }
+  }, [showBookingModal, property.propertyType]);
 
   // Get all images from property
   useEffect(() => {
@@ -88,7 +153,6 @@ const UserPropertyCard = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Check if user is logged in
     if (!isLoggedIn()) {
       if (onLoginRequired) {
         onLoginRequired('save', property._id);
@@ -117,7 +181,6 @@ const UserPropertyCard = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Check if user is logged in
     if (!isLoggedIn()) {
       if (onLoginRequired) {
         onLoginRequired('book', property._id);
@@ -134,16 +197,35 @@ const UserPropertyCard = ({
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     
+    if (!bookingData.duration) {
+      toast.error('Please enter duration');
+      return;
+    }
+    if (!bookingData.startDate) {
+      toast.error('Please select start date');
+      return;
+    }
+    
     try {
       setBooking(true);
       await userAPI.createBooking({
         propertyId: property._id,
-        visitDate: bookingData.visitDate || undefined,
+        duration: Number(bookingData.duration),
+        durationType: bookingData.durationType,
+        startDate: bookingData.startDate,
         notes: bookingData.notes || undefined
       });
-      toast.success('Property booked successfully! We will contact you soon.');
+      
+      const durationTypeText = bookingData.durationType === 'months' ? 'month(s)' : 'day(s)';
+      toast.success(`Booking request sent for ${bookingData.duration} ${durationTypeText}! Admin will review and confirm.`);
+      
       setShowBookingModal(false);
-      setBookingData({ visitDate: '', notes: '' });
+      setBookingData({
+        duration: '',
+        durationType: getBookingType(),
+        startDate: '',
+        notes: ''
+      });
     } catch (error) {
       console.error('Error booking property:', error);
       toast.error(error.response?.data?.message || 'Failed to book property');
@@ -155,7 +237,7 @@ const UserPropertyCard = ({
   const handleLoginRedirect = () => {
     setShowLoginModal(false);
     setPendingAction(null);
-    navigate('/auth');
+    navigate('/login');
   };
 
   const handleCancelLogin = () => {
@@ -166,6 +248,46 @@ const UserPropertyCard = ({
   const rating = 4.5;
   const reviewCount = 24;
   const isPropertyActive = property.propertyStatus === 'active';
+  const bookingType = getBookingType();
+  const isMonthlyBooking = bookingType === 'months';
+  const unitLabel = isMonthlyBooking ? 'months' : 'days';
+  const dailyRate = getDailyRate();
+
+  // Get min date for start date
+  const getMinDate = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
+  // Calculate end date preview
+  const getEndDatePreview = () => {
+    if (!bookingData.startDate || !bookingData.duration) return null;
+    const startDate = new Date(bookingData.startDate);
+    const endDate = new Date(startDate);
+    if (bookingData.durationType === 'months') {
+      endDate.setMonth(endDate.getMonth() + Number(bookingData.duration));
+    } else {
+      endDate.setDate(endDate.getDate() + Number(bookingData.duration));
+    }
+    return format(endDate, 'dd MMM yyyy');
+  };
+
+  const getDurationLabel = () => {
+    if (property.propertyType === 'pg') {
+      return 'Number of Months';
+    } else if (property.propertyType === 'room') {
+      return 'Number of Days';
+    }
+    return 'Duration';
+  };
+
+  const getPriceBreakdown = () => {
+    if (!bookingData.duration) return '';
+    if (bookingData.durationType === 'months') {
+      return `₹${property.mrp?.toLocaleString()} × ${bookingData.duration} month(s)`;
+    } else {
+      return `₹${pricePerUnit.toLocaleString()} × ${bookingData.duration} day(s)`;
+    }
+  };
 
   return (
     <>
@@ -175,7 +297,7 @@ const UserPropertyCard = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image Section */}
-        <div className="relative h-52 overflow-hidden bg-gray-100">
+        <div className="relative h-48 overflow-hidden bg-gray-100">
           <img
             src={getCurrentImage()}
             alt={property.address}
@@ -247,6 +369,7 @@ const UserPropertyCard = ({
                 : 'bg-blue-100 text-blue-800'
             }`}>
               {property.propertyType?.toUpperCase()}
+              {property.propertyType === 'pg' ? ' (Monthly)' : ' (Daily)'}
             </span>
           </div>
 
@@ -312,6 +435,9 @@ const UserPropertyCard = ({
             <div>
               <span className="text-2xl font-bold text-blue-600">₹{property.mrp?.toLocaleString()}</span>
               <span className="text-sm text-gray-500 ml-1">/month</span>
+              {property.propertyType === 'room' && dailyRate && (
+                <p className="text-xs text-gray-500 mt-0.5">(₹{dailyRate.toLocaleString()}/day)</p>
+              )}
             </div>
             {property.security > 0 && (
               <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -339,7 +465,7 @@ const UserPropertyCard = ({
             {property.availableFrom && (
               <div className="flex items-center gap-1.5 text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded-lg">
                 <HiCalendar className="text-gray-400 text-sm" />
-                <span>{format(new Date(property.availableFrom), 'dd MMM yyyy')}</span>
+                <span>From: {format(new Date(property.availableFrom), 'dd MMM yyyy')}</span>
               </div>
             )}
           </div>
@@ -436,7 +562,6 @@ const UserPropertyCard = ({
           
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-fadeInUp">
-              {/* Modal Header */}
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl">
                 <div className="flex justify-between items-start">
                   <div>
@@ -452,11 +577,17 @@ const UserPropertyCard = ({
                 </div>
               </div>
               
-              {/* Modal Body */}
               <div className="p-6">
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Price:</span> ₹{property.mrp?.toLocaleString()}/month
+                    <span className="font-semibold">
+                      {property.propertyType === 'pg' ? 'Monthly Rent:' : 'Daily Rent:'}
+                    </span> 
+                    {property.propertyType === 'pg' ? (
+                      <> ₹{property.mrp?.toLocaleString()}/month</>
+                    ) : (
+                      <> ₹{Math.round(property.mrp / 30).toLocaleString()}/day (₹{property.mrp?.toLocaleString()}/month)</>
+                    )}
                   </p>
                   {property.security > 0 && (
                     <p className="text-sm text-blue-800 mt-1">
@@ -467,23 +598,65 @@ const UserPropertyCard = ({
                 
                 <form onSubmit={handleBookingSubmit}>
                   <div className="space-y-4">
-                    {/* Visit Date */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <HiCalendar className="inline mr-1 text-gray-400" />
-                        Preferred Visit Date
+                        {getDurationLabel()} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={bookingData.duration}
+                          onChange={(e) => setBookingData({ ...bookingData, duration: e.target.value })}
+                          placeholder={`Enter number of ${unitLabel}`}
+                          min="1"
+                          step="1"
+                          required
+                          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        />
+                        <div className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                          {isMonthlyBooking ? 'Months' : 'Days'}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {property.propertyType === 'pg' 
+                          ? 'Monthly rental basis - minimum 1 month' 
+                          : 'Daily rental basis - flexible duration'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Date <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
-                        value={bookingData.visitDate}
-                        onChange={(e) => setBookingData({ ...bookingData, visitDate: e.target.value })}
-                        min={new Date().toISOString().split('T')[0]}
+                        value={bookingData.startDate}
+                        onChange={(e) => setBookingData({ ...bookingData, startDate: e.target.value })}
+                        min={getMinDate()}
+                        required
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       />
-                      <p className="text-xs text-gray-400 mt-1">Optional - We'll contact you to confirm</p>
                     </div>
 
-                    {/* Notes */}
+                    {getEndDatePreview() && (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">End Date:</span> {getEndDatePreview()}
+                        </p>
+                      </div>
+                    )}
+
+                    {totalAmount > 0 && (
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          <span className="font-semibold">Total Amount:</span> ₹{totalAmount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          {getPriceBreakdown()}
+                        </p>
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Additional Notes
@@ -492,13 +665,22 @@ const UserPropertyCard = ({
                         value={bookingData.notes}
                         onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
                         placeholder="Any specific requirements or questions..."
-                        rows="4"
+                        rows="3"
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
                       />
                     </div>
                   </div>
 
-                  {/* Modal Footer */}
+                  <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
+                    <div className="flex gap-2">
+                      <HiInformationCircle className="text-yellow-600 text-lg flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-yellow-700">
+                        Your booking request will be sent to the admin for approval. 
+                        You will be notified once it's confirmed.
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="flex gap-3 mt-6 pt-4 border-t">
                     <button
                       type="button"
@@ -509,8 +691,8 @@ const UserPropertyCard = ({
                     </button>
                     <button
                       type="submit"
-                      disabled={booking}
-                      className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                      disabled={booking || !bookingData.duration || !bookingData.startDate}
+                      className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {booking ? (
                         <>
@@ -520,7 +702,7 @@ const UserPropertyCard = ({
                       ) : (
                         <>
                           <HiCheckCircle className="text-lg" />
-                          <span>Confirm Booking</span>
+                          <span>Send Request</span>
                         </>
                       )}
                     </button>
