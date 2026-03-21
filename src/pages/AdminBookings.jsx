@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HiCheckCircle, HiXCircle, HiClock, HiEye, HiCurrencyRupee, HiUser, HiHome, 
   HiSearch, HiFilter, HiX, HiRefresh, HiChevronDown, HiChevronUp, HiDocumentText,
-  HiCalendar, HiLocationMarker, HiPhone, HiMail } from 'react-icons/hi';
+  HiCalendar, HiLocationMarker, HiPhone, HiMail, HiOutlineSearch, HiOfficeBuilding } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { userAPI } from '../services/api';
@@ -23,6 +23,16 @@ const AdminBookings = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Card filters state
+  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedStates, setSelectedStates] = useState([]);
+  const [selectedDurationTypes, setSelectedDurationTypes] = useState([]);
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [showCardFilters, setShowCardFilters] = useState(false);
+  const [filterType, setFilterType] = useState('all'); // 'all', 'pending', 'confirmed', 'rejected' for bookings
+  const [savedFilterType, setSavedFilterType] = useState('all'); // 'all', 'withNotes', 'withoutNotes'
 
   useEffect(() => {
     fetchData();
@@ -31,7 +41,11 @@ const AdminBookings = () => {
   useEffect(() => {
     filterBookings();
     filterSavedProperties();
-  }, [searchTerm, statusFilter, bookings, savedProperties]);
+  }, [searchTerm, statusFilter, bookings, savedProperties, selectedCities, selectedStates, selectedDurationTypes, priceRange, dateRange, filterType]);
+
+  useEffect(() => {
+    filterSavedProperties();
+  }, [savedFilterType]);
 
   const fetchData = async () => {
     try {
@@ -52,9 +66,29 @@ const AdminBookings = () => {
     }
   };
 
+  const getUniqueCities = () => {
+    const allProperties = [...bookings, ...savedProperties].map(item => 
+      item.property?.city
+    ).filter(Boolean);
+    return [...new Set(allProperties)];
+  };
+
+  const getUniqueStates = () => {
+    const allProperties = [...bookings, ...savedProperties].map(item => 
+      item.property?.state
+    ).filter(Boolean);
+    return [...new Set(allProperties)];
+  };
+
+  const getUniqueDurationTypes = () => {
+    const types = bookings.map(booking => booking.durationType).filter(Boolean);
+    return [...new Set(types)];
+  };
+
   const filterBookings = () => {
     let filtered = [...bookings];
     
+    // Search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(booking => 
@@ -65,8 +99,56 @@ const AdminBookings = () => {
       );
     }
     
+    // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(booking => booking.status === statusFilter);
+    }
+
+    // Card filters
+    if (selectedCities.length > 0) {
+      filtered = filtered.filter(booking => 
+        selectedCities.includes(booking.property?.city)
+      );
+    }
+
+    if (selectedStates.length > 0) {
+      filtered = filtered.filter(booking => 
+        selectedStates.includes(booking.property?.state)
+      );
+    }
+
+    if (selectedDurationTypes.length > 0) {
+      filtered = filtered.filter(booking => 
+        selectedDurationTypes.includes(booking.durationType)
+      );
+    }
+
+    if (priceRange.min) {
+      filtered = filtered.filter(booking => 
+        booking.totalAmount >= parseFloat(priceRange.min)
+      );
+    }
+
+    if (priceRange.max) {
+      filtered = filtered.filter(booking => 
+        booking.totalAmount <= parseFloat(priceRange.max)
+      );
+    }
+
+    if (dateRange.start) {
+      filtered = filtered.filter(booking => 
+        new Date(booking.startDate) >= new Date(dateRange.start)
+      );
+    }
+
+    if (dateRange.end) {
+      filtered = filtered.filter(booking => 
+        new Date(booking.endDate) <= new Date(dateRange.end)
+      );
+    }
+
+    if (filterType !== 'all') {
+      filtered = filtered.filter(booking => booking.status === filterType);
     }
     
     setFilteredBookings(filtered);
@@ -75,6 +157,7 @@ const AdminBookings = () => {
   const filterSavedProperties = () => {
     let filtered = [...savedProperties];
     
+    // Search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(saved => 
@@ -84,8 +167,52 @@ const AdminBookings = () => {
         saved.property?.city?.toLowerCase().includes(searchLower)
       );
     }
+
+    // Card filters
+    if (selectedCities.length > 0) {
+      filtered = filtered.filter(saved => 
+        selectedCities.includes(saved.property?.city)
+      );
+    }
+
+    if (selectedStates.length > 0) {
+      filtered = filtered.filter(saved => 
+        selectedStates.includes(saved.property?.state)
+      );
+    }
+
+    if (priceRange.min) {
+      filtered = filtered.filter(saved => 
+        saved.property?.mrp >= parseFloat(priceRange.min)
+      );
+    }
+
+    if (priceRange.max) {
+      filtered = filtered.filter(saved => 
+        saved.property?.mrp <= parseFloat(priceRange.max)
+      );
+    }
+
+    // Saved properties specific filter
+    if (savedFilterType === 'withNotes') {
+      filtered = filtered.filter(saved => saved.notes && saved.notes.trim() !== '');
+    } else if (savedFilterType === 'withoutNotes') {
+      filtered = filtered.filter(saved => !saved.notes || saved.notes.trim() === '');
+    }
     
     setFilteredSaved(filtered);
+  };
+
+  const clearCardFilters = () => {
+    setSelectedCities([]);
+    setSelectedStates([]);
+    setSelectedDurationTypes([]);
+    setPriceRange({ min: '', max: '' });
+    setDateRange({ start: '', end: '' });
+    setFilterType('all');
+    setSavedFilterType('all');
+    setSearchTerm('');
+    setStatusFilter('all');
   };
 
   const handleUpdateStatus = async (bookingId, status) => {
@@ -138,10 +265,12 @@ const AdminBookings = () => {
     return (
       <>
         <Navbar />
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading dashboard data...</p>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading dashboard data...</p>
+            </div>
           </div>
         </div>
       </>
@@ -151,110 +280,130 @@ const AdminBookings = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 admin-bookings-page">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dashboard-page">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Admin Dashboard
             </h1>
-            <p className="text-gray-600 mt-2">Manage bookings and saved properties</p>
+            <p className="text-gray-600 text-sm md:text-base mt-1">Manage bookings and saved properties</p>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all">
+          {/* Stats Cards - Responsive Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-4 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Bookings</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Total Bookings</p>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">{stats.total}</p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <HiClock className="text-blue-600 text-xl" />
+                <div className="bg-blue-100 p-2 md:p-3 rounded-lg">
+                  <HiClock className="text-blue-600 text-base md:text-xl" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-4 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Pending</p>
+                  <p className="text-xl md:text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <HiClock className="text-yellow-600 text-xl" />
+                <div className="bg-yellow-100 p-2 md:p-3 rounded-lg">
+                  <HiClock className="text-yellow-600 text-base md:text-xl" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-4 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Confirmed</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Confirmed</p>
+                  <p className="text-xl md:text-2xl font-bold text-green-600">{stats.confirmed}</p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <HiCheckCircle className="text-green-600 text-xl" />
+                <div className="bg-green-100 p-2 md:p-3 rounded-lg">
+                  <HiCheckCircle className="text-green-600 text-base md:text-xl" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-4 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Saved Properties</p>
-                  <p className="text-2xl font-bold text-purple-600">{savedProperties.length}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Saved Properties</p>
+                  <p className="text-xl md:text-2xl font-bold text-purple-600">{savedProperties.length}</p>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-lg">
-                  <HiHome className="text-purple-600 text-xl" />
+                <div className="bg-purple-100 p-2 md:p-3 rounded-lg">
+                  <HiHome className="text-purple-600 text-base md:text-xl" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-4 mb-6 border-b flex-wrap">
+          {/* Tabs - Responsive */}
+          <div className="flex gap-2 md:gap-4 mb-6 border-b overflow-x-auto pb-2">
             <button
               onClick={() => setActiveTab('bookings')}
-              className={`pb-3 px-4 flex items-center gap-2 transition-colors ${
+              className={`pb-2 md:pb-3 px-3 md:px-4 flex items-center gap-1 md:gap-2 transition-colors whitespace-nowrap ${
                 activeTab === 'bookings'
                   ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <HiClock className="text-lg" />
-              Bookings ({filteredBookings.length})
+              <HiClock className="text-base md:text-lg" />
+              <span className="text-sm md:text-base">Bookings ({filteredBookings.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`pb-3 px-4 flex items-center gap-2 transition-colors ${
+              className={`pb-2 md:pb-3 px-3 md:px-4 flex items-center gap-1 md:gap-2 transition-colors whitespace-nowrap ${
                 activeTab === 'saved'
                   ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <HiHome className="text-lg" />
-              Saved Properties ({filteredSaved.length})
+              <HiHome className="text-base md:text-lg" />
+              <span className="text-sm md:text-base">Saved ({filteredSaved.length})</span>
             </button>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and Filters - Responsive */}
           <div className="bg-white rounded-xl shadow-md p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 relative">
-                <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm md:text-base" />
                 <input
                   type="text"
-                  placeholder={`Search by user name, email, or property address...`}
+                  placeholder="Search by user name, email, or property address..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 md:pl-10 pr-4 py-2 md:py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <HiX className="text-base md:text-lg" />
+                  </button>
+                )}
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+                  onClick={() => setShowCardFilters(!showCardFilters)}
+                  className="px-3 md:px-4 py-2 md:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 flex items-center gap-2 text-sm md:text-base transition-all"
                 >
-                  <HiFilter />
-                  Filters
+                  <HiFilter className="text-sm md:text-base" />
+                  <span className="hidden sm:inline">Card Filters</span>
+                  {(selectedCities.length > 0 || selectedStates.length > 0 || selectedDurationTypes.length > 0 || priceRange.min || priceRange.max || dateRange.start || dateRange.end || filterType !== 'all' || savedFilterType !== 'all') && (
+                    <span className="bg-white text-blue-600 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      !
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="px-3 md:px-4 py-2 md:py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 flex items-center gap-2 text-sm md:text-base transition-all"
+                >
+                  <HiFilter className="text-sm md:text-base" />
+                  <span className="hidden sm:inline">Status Filter</span>
                   {statusFilter !== 'all' && (
                     <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       1
@@ -263,13 +412,302 @@ const AdminBookings = () => {
                 </button>
                 <button
                   onClick={fetchData}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+                  className="px-3 md:px-4 py-2 md:py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 flex items-center gap-2 text-sm md:text-base transition-all"
                 >
-                  <HiRefresh />
-                  Refresh
+                  <HiRefresh className="text-sm md:text-base" />
+                  <span className="hidden sm:inline">Refresh</span>
                 </button>
               </div>
             </div>
+            
+            {/* Card Filters Section */}
+            {showCardFilters && (
+              <div className="mt-4 pt-4 border-t space-y-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-gray-800">Advanced Filters</h3>
+                  <button
+                    onClick={clearCardFilters}
+                    className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <HiX className="text-sm" />
+                    Clear All
+                  </button>
+                </div>
+
+                {/* City Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cities</label>
+                  <div className="flex flex-wrap gap-2">
+                    {getUniqueCities().map(city => (
+                      <button
+                        key={city}
+                        onClick={() => {
+                          setSelectedCities(prev =>
+                            prev.includes(city)
+                              ? prev.filter(c => c !== city)
+                              : [...prev, city]
+                          );
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                          selectedCities.includes(city)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* State Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">States</label>
+                  <div className="flex flex-wrap gap-2">
+                    {getUniqueStates().map(state => (
+                      <button
+                        key={state}
+                        onClick={() => {
+                          setSelectedStates(prev =>
+                            prev.includes(state)
+                              ? prev.filter(s => s !== state)
+                              : [...prev, state]
+                          );
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                          selectedStates.includes(state)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {state}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Duration Type Filter (Bookings only) */}
+                {activeTab === 'bookings' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration Type</label>
+                    <div className="flex flex-wrap gap-2">
+                      {getUniqueDurationTypes().map(type => (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setSelectedDurationTypes(prev =>
+                              prev.includes(type)
+                                ? prev.filter(t => t !== type)
+                                : [...prev, type]
+                            );
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                            selectedDurationTypes.includes(type)
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Price Range Filter */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Min Price (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={priceRange.min}
+                      onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Price (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={priceRange.max}
+                      onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Date Range Filter (Bookings only) */}
+                {activeTab === 'bookings' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                      <input
+                        type="date"
+                        value={dateRange.start}
+                        onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                      <input
+                        type="date"
+                        value={dateRange.end}
+                        onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Booking Status Quick Filter */}
+                {activeTab === 'bookings' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Booking Status</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['all', 'pending', 'confirmed', 'rejected'].map(status => (
+                        <button
+                          key={status}
+                          onClick={() => setFilterType(status)}
+                          className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                            filterType === status
+                              ? status === 'pending' ? 'bg-yellow-600 text-white'
+                                : status === 'confirmed' ? 'bg-green-600 text-white'
+                                : status === 'rejected' ? 'bg-red-600 text-white'
+                                : 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Saved Properties Filter */}
+                {activeTab === 'saved' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes Filter</label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSavedFilterType('all')}
+                        className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                          savedFilterType === 'all'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={() => setSavedFilterType('withNotes')}
+                        className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                          savedFilterType === 'withNotes'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        With Notes
+                      </button>
+                      <button
+                        onClick={() => setSavedFilterType('withoutNotes')}
+                        className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
+                          savedFilterType === 'withoutNotes'
+                            ? 'bg-yellow-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        Without Notes
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Filters Summary */}
+                {(selectedCities.length > 0 || selectedStates.length > 0 || selectedDurationTypes.length > 0 || priceRange.min || priceRange.max || dateRange.start || dateRange.end || filterType !== 'all' || savedFilterType !== 'all') && (
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-xs text-blue-700 mb-2 font-medium">Active Filters:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCities.map(city => (
+                        <span key={city} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          {city}
+                          <button onClick={() => setSelectedCities(prev => prev.filter(c => c !== city))}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      ))}
+                      {selectedStates.map(state => (
+                        <span key={state} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          {state}
+                          <button onClick={() => setSelectedStates(prev => prev.filter(s => s !== state))}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      ))}
+                      {selectedDurationTypes.map(type => (
+                        <span key={type} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          {type}
+                          <button onClick={() => setSelectedDurationTypes(prev => prev.filter(t => t !== type))}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      ))}
+                      {priceRange.min && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          Min: ₹{priceRange.min}
+                          <button onClick={() => setPriceRange({ ...priceRange, min: '' })}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      )}
+                      {priceRange.max && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          Max: ₹{priceRange.max}
+                          <button onClick={() => setPriceRange({ ...priceRange, max: '' })}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      )}
+                      {dateRange.start && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          From: {dateRange.start}
+                          <button onClick={() => setDateRange({ ...dateRange, start: '' })}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      )}
+                      {dateRange.end && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          To: {dateRange.end}
+                          <button onClick={() => setDateRange({ ...dateRange, end: '' })}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      )}
+                      {filterType !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          Status: {filterType}
+                          <button onClick={() => setFilterType('all')}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      )}
+                      {savedFilterType !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          Notes: {savedFilterType === 'withNotes' ? 'With Notes' : 'Without Notes'}
+                          <button onClick={() => setSavedFilterType('all')}>
+                            <HiX className="text-xs" />
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             
             {showFilters && activeTab === 'bookings' && (
               <div className="mt-4 pt-4 border-t">
@@ -279,7 +717,7 @@ const AdminBookings = () => {
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                      className={`px-3 py-1.5 rounded-full text-xs md:text-sm transition-all ${
                         statusFilter === status
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -293,8 +731,150 @@ const AdminBookings = () => {
             )}
           </div>
 
-          {activeTab === 'bookings' ? (
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          {/* Rest of your existing code remains the same */}
+          {/* Mobile Card View for Bookings */}
+          {activeTab === 'bookings' && (
+            <div className="md:hidden space-y-4">
+              {filteredBookings.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-md text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <HiClock className="text-3xl text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-base">No bookings found</p>
+                  <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
+                </div>
+              ) : (
+                filteredBookings.map((booking) => (
+                  <div key={booking._id} className="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div className="p-4">
+                      {/* User Info */}
+                      <div className="flex items-center gap-3 mb-3 pb-3 border-b">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {booking.user?.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{booking.user?.name}</p>
+                          <p className="text-xs text-gray-500">{booking.user?.email}</p>
+                          <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                            <HiPhone className="text-xs" /> {booking.user?.phone}
+                          </p>
+                        </div>
+                        {getStatusBadge(booking.status)}
+                      </div>
+                      
+                      {/* Property Info */}
+                      <div className="mb-3">
+                        <p className="font-medium text-gray-900">{booking.property?.address}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                          <HiLocationMarker className="text-xs" /> {booking.property?.city}, {booking.property?.state}
+                        </p>
+                      </div>
+                      
+                      {/* Booking Details */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <p className="text-xs text-gray-500">Duration</p>
+                          <p className="text-sm font-medium">{booking.duration} {booking.durationType}</p>
+                          <p className="text-xs text-gray-400">
+                            {format(new Date(booking.startDate), 'dd MMM')} - {format(new Date(booking.endDate), 'dd MMM yyyy')}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Total Amount</p>
+                          <p className="text-sm font-bold text-blue-600">₹{booking.totalAmount?.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-2 border-t">
+                        {booking.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => openActionModal(booking, 'confirm')}
+                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-all text-sm"
+                            >
+                              <HiCheckCircle className="text-base" />
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => openActionModal(booking, 'reject')}
+                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm"
+                            >
+                              <HiXCircle className="text-base" />
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {booking.notes && (
+                          <button
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setShowModal(true);
+                            }}
+                            className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm"
+                          >
+                            <HiDocumentText className="text-base" />
+                            Notes
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Mobile Card View for Saved Properties */}
+          {activeTab === 'saved' && (
+            <div className="md:hidden space-y-4">
+              {filteredSaved.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-md text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <HiHome className="text-3xl text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-base">No saved properties found</p>
+                  <p className="text-gray-400 text-sm mt-1">Try adjusting your search</p>
+                </div>
+              ) : (
+                filteredSaved.map((saved) => (
+                  <div key={saved._id} className="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex items-center gap-3 mb-3 pb-3 border-b">
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {saved.user?.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{saved.user?.name}</p>
+                          <p className="text-xs text-gray-500">{saved.user?.email}</p>
+                        </div>
+                      </div>
+                      <div className="mb-2">
+                        <p className="font-medium text-gray-900">{saved.property?.address}</p>
+                        <p className="text-xs text-gray-500 mt-1">{saved.property?.city}, {saved.property?.state}</p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm font-bold text-blue-600">₹{saved.property?.mrp?.toLocaleString()}/month</p>
+                        <p className="text-xs text-gray-400">
+                          Saved: {format(new Date(saved.savedAt), 'dd MMM yyyy')}
+                        </p>
+                      </div>
+                      {saved.notes && (
+                        <div className="mt-2 pt-2 border-t">
+                          <p className="text-xs text-gray-500">Notes:</p>
+                          <p className="text-sm text-gray-600">{saved.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Desktop Table View for Bookings */}
+          {activeTab === 'bookings' && (
+            <div className="hidden md:block bg-white rounded-xl shadow-md overflow-hidden">
               {filteredBookings.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -394,8 +974,11 @@ const AdminBookings = () => {
                 </div>
               )}
             </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          )}
+
+          {/* Desktop Table View for Saved Properties */}
+          {activeTab === 'saved' && (
+            <div className="hidden md:block bg-white rounded-xl shadow-md overflow-hidden">
               {filteredSaved.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -456,72 +1039,72 @@ const AdminBookings = () => {
         </div>
       </div>
 
-      {/* Booking Details Modal */}
+      {/* Booking Details Modal - Responsive */}
       {showModal && selectedBooking && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
           <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fadeInUp">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl">
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-fadeInUp">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 md:p-6 rounded-t-2xl">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-white">Booking Details</h3>
+                  <h3 className="text-lg md:text-xl font-bold text-white">Booking Details</h3>
                   <button onClick={() => setShowModal(false)} className="text-white hover:text-gray-200">
-                    <HiX className="text-2xl" />
+                    <HiX className="text-xl md:text-2xl" />
                   </button>
                 </div>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-5 md:p-6 space-y-4">
                 <div className="flex items-center gap-3 pb-3 border-b">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <HiUser className="text-blue-600 text-xl" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <HiUser className="text-blue-600 text-base md:text-xl" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{selectedBooking.user?.name}</p>
-                    <p className="text-sm text-gray-500">{selectedBooking.user?.email}</p>
-                    <p className="text-sm text-gray-500">{selectedBooking.user?.phone}</p>
+                    <p className="font-semibold text-gray-900 text-sm md:text-base">{selectedBooking.user?.name}</p>
+                    <p className="text-xs md:text-sm text-gray-500">{selectedBooking.user?.email}</p>
+                    <p className="text-xs md:text-sm text-gray-500">{selectedBooking.user?.phone}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Property</p>
-                  <p className="font-medium">{selectedBooking.property?.address}</p>
-                  <p className="text-sm text-gray-500">{selectedBooking.property?.city}, {selectedBooking.property?.state}</p>
+                  <p className="text-xs md:text-sm text-gray-500">Property</p>
+                  <p className="font-medium text-sm md:text-base">{selectedBooking.property?.address}</p>
+                  <p className="text-xs md:text-sm text-gray-500">{selectedBooking.property?.city}, {selectedBooking.property?.state}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-500">Duration</p>
-                    <p className="font-medium">{selectedBooking.duration} {selectedBooking.durationType}</p>
+                    <p className="text-xs md:text-sm text-gray-500">Duration</p>
+                    <p className="font-medium text-sm md:text-base">{selectedBooking.duration} {selectedBooking.durationType}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Total Amount</p>
-                    <p className="font-medium text-blue-600">₹{selectedBooking.totalAmount?.toLocaleString()}</p>
+                    <p className="text-xs md:text-sm text-gray-500">Total Amount</p>
+                    <p className="font-medium text-blue-600 text-sm md:text-base">₹{selectedBooking.totalAmount?.toLocaleString()}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Booking Period</p>
-                  <p className="font-medium">
+                  <p className="text-xs md:text-sm text-gray-500">Booking Period</p>
+                  <p className="font-medium text-sm md:text-base">
                     {format(new Date(selectedBooking.startDate), 'dd MMM yyyy')} - {format(new Date(selectedBooking.endDate), 'dd MMM yyyy')}
                   </p>
                 </div>
                 {selectedBooking.notes && (
                   <div className="bg-yellow-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500 mb-1">User Notes</p>
-                    <p className="text-sm text-gray-700">{selectedBooking.notes}</p>
+                    <p className="text-xs md:text-sm text-gray-500 mb-1">User Notes</p>
+                    <p className="text-sm md:text-base text-gray-700">{selectedBooking.notes}</p>
                   </div>
                 )}
                 {selectedBooking.adminNotes && (
                   <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500 mb-1">Admin Notes</p>
-                    <p className="text-sm text-gray-700">{selectedBooking.adminNotes}</p>
+                    <p className="text-xs md:text-sm text-gray-500 mb-1">Admin Notes</p>
+                    <p className="text-sm md:text-base text-gray-700">{selectedBooking.adminNotes}</p>
                   </div>
                 )}
                 <div className="pt-3">
                   {getStatusBadge(selectedBooking.status)}
                 </div>
               </div>
-              <div className="p-6 pt-0 flex justify-end">
+              <div className="p-5 md:p-6 pt-0 flex justify-end">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm md:text-base"
                 >
                   Close
                 </button>
@@ -531,23 +1114,23 @@ const AdminBookings = () => {
         </div>
       )}
 
-      {/* Action Modal (Accept/Reject with Notes) */}
+      {/* Action Modal - Responsive */}
       {showActionModal && actionBooking && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setShowActionModal(false)} />
           <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fadeInUp">
-              <div className={`p-6 rounded-t-2xl ${actionType === 'confirm' ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-red-600 to-red-700'}`}>
-                <h3 className="text-xl font-bold text-white">
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-fadeInUp">
+              <div className={`p-5 md:p-6 rounded-t-2xl ${actionType === 'confirm' ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-red-600 to-red-700'}`}>
+                <h3 className="text-lg md:text-xl font-bold text-white">
                   {actionType === 'confirm' ? 'Approve Booking' : 'Reject Booking'}
                 </h3>
               </div>
-              <div className="p-6 space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Property: <span className="font-medium">{actionBooking.property?.address}</span></p>
-                  <p className="text-sm text-gray-600 mt-1">User: <span className="font-medium">{actionBooking.user?.name}</span></p>
-                  <p className="text-sm text-gray-600 mt-1">Duration: <span className="font-medium">{actionBooking.duration} {actionBooking.durationType}</span></p>
-                  <p className="text-sm text-gray-600 mt-1">Total: <span className="font-medium text-blue-600">₹{actionBooking.totalAmount?.toLocaleString()}</span></p>
+              <div className="p-5 md:p-6 space-y-4">
+                <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
+                  <p className="text-xs md:text-sm text-gray-600">Property: <span className="font-medium">{actionBooking.property?.address}</span></p>
+                  <p className="text-xs md:text-sm text-gray-600 mt-1">User: <span className="font-medium">{actionBooking.user?.name}</span></p>
+                  <p className="text-xs md:text-sm text-gray-600 mt-1">Duration: <span className="font-medium">{actionBooking.duration} {actionBooking.durationType}</span></p>
+                  <p className="text-xs md:text-sm text-gray-600 mt-1">Total: <span className="font-medium text-blue-600">₹{actionBooking.totalAmount?.toLocaleString()}</span></p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -558,19 +1141,19 @@ const AdminBookings = () => {
                     onChange={(e) => setAdminNotes(e.target.value)}
                     placeholder="Add any notes or comments..."
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowActionModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm md:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => handleUpdateStatus(actionBooking._id, actionType === 'confirm' ? 'confirmed' : 'rejected')}
-                    className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition-colors text-sm md:text-base ${
                       actionType === 'confirm' 
                         ? 'bg-green-600 hover:bg-green-700' 
                         : 'bg-red-600 hover:bg-red-700'
@@ -586,8 +1169,13 @@ const AdminBookings = () => {
       )}
 
       <style jsx>{`
-        .admin-bookings-page {
-          margin-top: 80px;
+        .dashboard-page {
+          margin-top: 60px;
+        }
+        @media (min-width: 768px) {
+          .dashboard-page {
+            margin-top: 80px;
+          }
         }
         @keyframes fadeInUp {
           from {

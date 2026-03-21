@@ -74,6 +74,8 @@ const AuthPage = () => {
       newErrors.name = 'Name is required';
     } else if (registerData.name.length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
+    } else if (registerData.name.length > 50) {
+      newErrors.name = 'Name must be less than 50 characters';
     }
 
     if (!registerData.email.trim()) {
@@ -92,6 +94,8 @@ const AuthPage = () => {
       newErrors.password = 'Password is required';
     } else if (registerData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
+    } else if (registerData.password.length > 100) {
+      newErrors.password = 'Password must be less than 100 characters';
     }
 
     if (registerData.password !== registerData.confirmPassword) {
@@ -126,6 +130,11 @@ const AuthPage = () => {
     setLoading(true);
     try {
       const response = await authAPI.login(loginData);
+      
+      if (!response.token) {
+        throw new Error('No token received');
+      }
+      
       toast.success('Login successful!');
       
       // Store user data in localStorage
@@ -206,7 +215,7 @@ const AuthPage = () => {
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
           <div className="flex flex-col lg:flex-row">
             {/* Left Side - Branding/Image */}
-            <div className="lg:w-1/2 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+            <div className="lg:w-1/2 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 md:p-12 text-white flex flex-col justify-between relative overflow-hidden">
               {/* Animated Background */}
               <div className="absolute inset-0 bg-black opacity-10"></div>
               <div className="absolute -right-20 -top-20 w-64 h-64 bg-white rounded-full opacity-10"></div>
@@ -218,10 +227,10 @@ const AuthPage = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <h1 className="text-4xl lg:text-5xl font-bold mb-4">
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                     {isLogin ? 'Welcome Back!' : 'Join Us Today!'}
                   </h1>
-                  <p className="text-xl opacity-90 mb-8">
+                  <p className="text-base md:text-xl opacity-90 mb-6 md:mb-8">
                     {isLogin 
                       ? 'Sign in to access your account and manage your properties'
                       : 'Create an account to start your property journey'}
@@ -232,38 +241,38 @@ const AuthPage = () => {
                   initial={{ y: 50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="space-y-4"
+                  className="space-y-3 md:space-y-4"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <HiCheckCircle className="text-xl" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <HiCheckCircle className="text-lg md:text-xl" />
                     </div>
-                    <span>Find your perfect property</span>
+                    <span className="text-sm md:text-base">Find your perfect property</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <HiCheckCircle className="text-xl" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <HiCheckCircle className="text-lg md:text-xl" />
                     </div>
-                    <span>Save and book properties</span>
+                    <span className="text-sm md:text-base">Save and book properties</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <HiCheckCircle className="text-xl" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <HiCheckCircle className="text-lg md:text-xl" />
                     </div>
-                    <span>Get instant notifications</span>
+                    <span className="text-sm md:text-base">Get instant notifications</span>
                   </div>
                 </motion.div>
               </div>
 
-              <div className="relative z-10 mt-12">
-                <p className="text-sm opacity-80">
+              <div className="relative z-10 mt-8 md:mt-12">
+                <p className="text-xs md:text-sm opacity-80">
                   © 2026 PropertyFinder. All rights reserved.
                 </p>
               </div>
             </div>
 
             {/* Right Side - Form */}
-            <div className="lg:w-1/2 p-8 lg:p-12">
+            <div className="lg:w-1/2 p-6 md:p-8 lg:p-12">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={isLogin ? 'login' : 'register'}
@@ -274,41 +283,20 @@ const AuthPage = () => {
                   transition={{ duration: 0.3 }}
                 >
                   {/* Header */}
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                  <div className="text-center mb-6 md:mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
                       {isLogin ? 'Sign In' : 'Create Account'}
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-sm md:text-base text-gray-600">
                       {isLogin 
                         ? 'Enter your credentials to access your account'
                         : 'Fill in the details to register'}
                     </p>
                   </div>
 
-                  {/* Social Login Buttons */}
-                  {/* <div className="flex gap-3 mb-6">
-                    <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      <FcGoogle className="text-xl" />
-                      <span className="text-sm font-medium">Google</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      <FaFacebook className="text-xl text-blue-600" />
-                      <span className="text-sm font-medium">Facebook</span>
-                    </button>
-                  </div> */}
-
-                  {/* <div className="relative mb-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500">Or continue with</span>
-                    </div>
-                  </div> */}
-
                   {/* Login Form */}
                   {isLogin ? (
-                    <form onSubmit={handleLogin} className="space-y-5">
+                    <form onSubmit={handleLogin} className="space-y-4 md:space-y-5">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Email Address
@@ -321,7 +309,7 @@ const AuthPage = () => {
                             value={loginData.email}
                             onChange={(e) => handleChange(e, true)}
                             placeholder="Enter your email"
-                            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-4 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.email ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -343,7 +331,7 @@ const AuthPage = () => {
                             value={loginData.password}
                             onChange={(e) => handleChange(e, true)}
                             placeholder="Enter your password"
-                            className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-12 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.password ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -360,7 +348,7 @@ const AuthPage = () => {
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <label className="flex items-center">
                           <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                           <span className="ml-2 text-sm text-gray-600">Remember me</span>
@@ -368,12 +356,12 @@ const AuthPage = () => {
                         <button type="button" className="text-sm text-blue-600 hover:text-blue-800">
                           Forgot password?
                         </button>
-                      </div>
+                      </div> */}
 
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 md:py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {loading ? (
                           <>
@@ -390,35 +378,7 @@ const AuthPage = () => {
                     </form>
                   ) : (
                     /* Register Form */
-                    <form onSubmit={handleRegister} className="space-y-4">
-                      {/* Profile Photo */}
-                      {/* <div className="flex justify-center mb-4">
-                        <div className="relative">
-                          <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-lg">
-                            {photoPreview ? (
-                              <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <HiPhotograph className="text-3xl" />
-                              </div>
-                            )}
-                          </div>
-                          <label
-                            htmlFor="profilePhoto"
-                            className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
-                          >
-                            <HiPhotograph className="text-sm" />
-                          </label>
-                          <input
-                            type="file"
-                            id="profilePhoto"
-                            accept="image/*"
-                            onChange={handlePhotoChange}
-                            className="hidden"
-                          />
-                        </div>
-                      </div> */}
-
+                    <form onSubmit={handleRegister} className="space-y-3 md:space-y-4">
                       {/* Name */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -432,7 +392,7 @@ const AuthPage = () => {
                             value={registerData.name}
                             onChange={(e) => handleChange(e, false)}
                             placeholder="Enter your full name"
-                            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-4 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.name ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -455,7 +415,7 @@ const AuthPage = () => {
                             value={registerData.email}
                             onChange={(e) => handleChange(e, false)}
                             placeholder="Enter your email"
-                            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-4 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.email ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -479,7 +439,7 @@ const AuthPage = () => {
                             onChange={(e) => handleChange(e, false)}
                             placeholder="Enter 10-digit phone number"
                             maxLength="10"
-                            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-4 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.phone ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -502,7 +462,7 @@ const AuthPage = () => {
                             value={registerData.password}
                             onChange={(e) => handleChange(e, false)}
                             placeholder="Create a password"
-                            className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-12 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.password ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -532,7 +492,7 @@ const AuthPage = () => {
                             value={registerData.confirmPassword}
                             onChange={(e) => handleChange(e, false)}
                             placeholder="Confirm your password"
-                            className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                            className={`w-full pl-10 pr-12 py-2.5 md:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                               errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                             }`}
                           />
@@ -552,7 +512,7 @@ const AuthPage = () => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 md:py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {loading ? (
                           <>
@@ -571,7 +531,7 @@ const AuthPage = () => {
 
                   {/* Toggle between Login/Register */}
                   <div className="mt-6 text-center">
-                    <p className="text-gray-600">
+                    <p className="text-sm md:text-base text-gray-600">
                       {isLogin ? "Don't have an account? " : "Already have an account? "}
                       <button
                         type="button"

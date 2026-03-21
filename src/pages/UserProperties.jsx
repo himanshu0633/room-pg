@@ -144,7 +144,7 @@ const UserProperties = () => {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4 py-8 user-properties-page">
+      <div className="container mx-auto px-4 py-8 dashboard-page">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -158,9 +158,9 @@ const UserProperties = () => {
           <div className="flex items-center gap-2">
             <HiHome className="text-blue-600 text-xl" />
             <h2 className="text-xl font-semibold text-gray-800">All Properties</h2>
-            <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">
+            {/* <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">
               {filteredProperties.length} properties
-            </span>
+            </span> */}
           </div>
           <p className="text-gray-500 text-sm mt-1">Discover the best properties available for rent</p>
         </div>
@@ -266,9 +266,7 @@ const UserProperties = () => {
         .animate-fadeInUp {
           animation: fadeInUp 0.3s ease-out forwards;
         }
-        .user-properties-page {
-          margin-top: 80px;
-        }
+   
       `}</style>
     </>
   );

@@ -143,215 +143,215 @@ const Dashboard = () => {
   return (<>
     <Navbar />
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dashboard-page">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Property Dashboard
             </h1>
-            <p className="text-gray-600 mt-1">Manage your properties efficiently</p>
+            <p className="text-gray-600 text-sm md:text-base mt-1">Manage your properties efficiently</p>
           </div>
           <Link
             to="/properties/add"
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
           >
-            <HiPlus className="text-xl" />
+            <HiPlus className="text-lg md:text-xl" />
             <span>Add New Property</span>
           </Link>
         </div>
 
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative max-w-md">
-            <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <div className="relative max-w-full md:max-w-md">
+            <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm md:text-base" />
             <input
               type="text"
               placeholder="Search by address, city, state, sector..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+              className="w-full pl-9 md:pl-10 pr-8 md:pr-10 py-2 md:py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white text-sm md:text-base"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <HiX className="text-lg" />
+                <HiX className="text-base md:text-lg" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Responsive Grid */}
         <div className="mb-8">
-          {/* Summary Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+          {/* Summary Stats - Responsive grid with 2 columns on mobile, 4 on desktop */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-5 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Properties</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-1">{stats.total}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Total Properties</p>
+                  <p className="text-xl md:text-3xl font-bold text-gray-800 mt-1">{stats.total}</p>
                 </div>
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl">
-                  <HiHome className="text-2xl text-white" />
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 md:p-3 rounded-xl">
+                  <HiHome className="text-lg md:text-2xl text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-5 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Active Properties</p>
-                  <p className="text-3xl font-bold text-green-600 mt-1">{stats.active}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Active Properties</p>
+                  <p className="text-xl md:text-3xl font-bold text-green-600 mt-1">{stats.active}</p>
                 </div>
-                <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-xl">
-                  <HiTrendingUp className="text-2xl text-white" />
+                <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 md:p-3 rounded-xl">
+                  <HiTrendingUp className="text-lg md:text-2xl text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-5 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Inactive Properties</p>
-                  <p className="text-3xl font-bold text-red-600 mt-1">{stats.inactive}</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Inactive Properties</p>
+                  <p className="text-xl md:text-3xl font-bold text-red-600 mt-1">{stats.inactive}</p>
                 </div>
-                <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-xl">
-                  <HiTrendingDown className="text-2xl text-white" />
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-2 md:p-3 rounded-xl">
+                  <HiTrendingDown className="text-lg md:text-2xl text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-5 hover:shadow-lg transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Occupancy Rate</p>
-                  <p className="text-3xl font-bold text-purple-600 mt-1">{activePercentage}%</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Occupancy Rate</p>
+                  <p className="text-xl md:text-3xl font-bold text-purple-600 mt-1">{activePercentage}%</p>
                 </div>
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
-                  <HiChartBar className="text-2xl text-white" />
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-2 md:p-3 rounded-xl">
+                  <HiChartBar className="text-lg md:text-2xl text-white" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Status Filters */}
+          {/* Status Filters - Responsive Grid */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <HiFilter className="text-blue-600" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <HiFilter className="text-blue-600 text-sm md:text-base" />
               Status Filters
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {/* Total Properties - Always shows all */}
-              <div className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg ${
+              <div className={`bg-white rounded-xl shadow-md p-3 md:p-5 transition-all cursor-pointer hover:shadow-lg ${
                 statusFilter === 'all' && !typeFilter !== 'all' ? 'ring-2 ring-blue-500' : ''
               }`}
               onClick={() => handleStatusFilter('all')}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">All Properties</p>
-                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">All Properties</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800 mt-1">{stats.total}</p>
                   </div>
-                  <div className="bg-gray-500 p-3 rounded-xl">
-                    <HiHome className="text-xl text-white" />
+                  <div className="bg-gray-500 p-2 md:p-3 rounded-xl">
+                    <HiHome className="text-base md:text-xl text-white" />
                   </div>
                 </div>
                 {statusFilter === 'all' && (
-                  <div className="mt-2 text-xs text-blue-600 font-semibold">✓ Current Filter</div>
+                  <div className="mt-1 md:mt-2 text-xs text-blue-600 font-semibold">✓ Current Filter</div>
                 )}
               </div>
 
               {/* Active Properties - Clickable */}
               <div
                 onClick={() => handleStatusFilter('active')}
-                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                className={`bg-white rounded-xl shadow-md p-3 md:p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
                   statusFilter === 'active' ? 'ring-2 ring-green-500 shadow-lg' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">Active Properties</p>
-                    <p className="text-2xl font-bold text-green-600 mt-1">{stats.active}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">Active Properties</p>
+                    <p className="text-lg md:text-2xl font-bold text-green-600 mt-1">{stats.active}</p>
                   </div>
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-xl">
-                    <HiPhotograph className="text-xl text-white" />
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 md:p-3 rounded-xl">
+                    <HiPhotograph className="text-base md:text-xl text-white" />
                   </div>
                 </div>
                 {statusFilter === 'active' && (
-                  <div className="mt-2 text-xs text-green-600 font-semibold">✓ Selected</div>
+                  <div className="mt-1 md:mt-2 text-xs text-green-600 font-semibold">✓ Selected</div>
                 )}
               </div>
 
               {/* Inactive Properties - Clickable */}
               <div
                 onClick={() => handleStatusFilter('inactive')}
-                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                className={`bg-white rounded-xl shadow-md p-3 md:p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
                   statusFilter === 'inactive' ? 'ring-2 ring-red-500 shadow-lg' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">Inactive Properties</p>
-                    <p className="text-2xl font-bold text-red-600 mt-1">{stats.inactive}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">Inactive Properties</p>
+                    <p className="text-lg md:text-2xl font-bold text-red-600 mt-1">{stats.inactive}</p>
                   </div>
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-xl">
-                    <HiOfficeBuilding className="text-xl text-white" />
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 p-2 md:p-3 rounded-xl">
+                    <HiOfficeBuilding className="text-base md:text-xl text-white" />
                   </div>
                 </div>
                 {statusFilter === 'inactive' && (
-                  <div className="mt-2 text-xs text-red-600 font-semibold">✓ Selected</div>
+                  <div className="mt-1 md:mt-2 text-xs text-red-600 font-semibold">✓ Selected</div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Type Filters */}
+          {/* Type Filters - Responsive Grid */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <HiOfficeBuilding className="text-blue-600" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <HiOfficeBuilding className="text-blue-600 text-sm md:text-base" />
               Property Type Filters
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               {/* PG Properties - Clickable */}
               <div
                 onClick={() => handleTypeFilter('pg')}
-                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                className={`bg-white rounded-xl shadow-md p-3 md:p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
                   typeFilter === 'pg' ? 'ring-2 ring-purple-500 shadow-lg' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">PG Properties</p>
-                    <p className="text-2xl font-bold text-purple-600 mt-1">{stats.pg}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">PG Properties</p>
+                    <p className="text-lg md:text-2xl font-bold text-purple-600 mt-1">{stats.pg}</p>
                   </div>
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl">
-                    <HiUsers className="text-xl text-white" />
+                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-2 md:p-3 rounded-xl">
+                    <HiUsers className="text-base md:text-xl text-white" />
                   </div>
                 </div>
                 {typeFilter === 'pg' && (
-                  <div className="mt-2 text-xs text-purple-600 font-semibold">✓ Selected</div>
+                  <div className="mt-1 md:mt-2 text-xs text-purple-600 font-semibold">✓ Selected</div>
                 )}
               </div>
 
               {/* Room Properties - Clickable */}
               <div
                 onClick={() => handleTypeFilter('room')}
-                className={`bg-white rounded-xl shadow-md p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
+                className={`bg-white rounded-xl shadow-md p-3 md:p-5 transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 ${
                   typeFilter === 'room' ? 'ring-2 ring-orange-500 shadow-lg' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">Room Properties</p>
-                    <p className="text-2xl font-bold text-orange-600 mt-1">{stats.room}</p>
+                    <p className="text-gray-500 text-xs md:text-sm">Room Properties</p>
+                    <p className="text-lg md:text-2xl font-bold text-orange-600 mt-1">{stats.room}</p>
                   </div>
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-3 rounded-xl">
-                    <HiHome className="text-xl text-white" />
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-2 md:p-3 rounded-xl">
+                    <HiHome className="text-base md:text-xl text-white" />
                   </div>
                 </div>
                 {typeFilter === 'room' && (
-                  <div className="mt-2 text-xs text-orange-600 font-semibold">✓ Selected</div>
+                  <div className="mt-1 md:mt-2 text-xs text-orange-600 font-semibold">✓ Selected</div>
                 )}
               </div>
             </div>
@@ -360,53 +360,53 @@ const Dashboard = () => {
 
         {/* Properties List */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="p-4 md:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">{getFilterTitle()}</h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <h2 className="text-lg md:text-xl font-bold text-gray-800">{getFilterTitle()}</h2>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
                 Showing {filteredProperties.length} of {properties.length} properties
                 {searchTerm && ` matching "${searchTerm}"`}
               </p>
             </div>
             
-            {/* Filter Chips */}
+            {/* Filter Chips - Responsive wrapping */}
             <div className="flex flex-wrap gap-2">
               {statusFilter !== 'all' && (
                 <button
                   onClick={() => setStatusFilter('all')}
-                  className="px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-sm hover:bg-green-100 flex items-center gap-1 transition-all"
+                  className="px-2 md:px-3 py-1 md:py-1.5 bg-green-50 text-green-600 rounded-full text-xs md:text-sm hover:bg-green-100 flex items-center gap-1 transition-all"
                 >
                   <span>Status: {statusFilter}</span>
-                  <span className="text-lg ml-1">&times;</span>
+                  <span className="text-base md:text-lg ml-1">&times;</span>
                 </button>
               )}
               
               {typeFilter !== 'all' && (
                 <button
                   onClick={() => setTypeFilter('all')}
-                  className="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full text-sm hover:bg-purple-100 flex items-center gap-1 transition-all"
+                  className="px-2 md:px-3 py-1 md:py-1.5 bg-purple-50 text-purple-600 rounded-full text-xs md:text-sm hover:bg-purple-100 flex items-center gap-1 transition-all"
                 >
                   <span>Type: {typeFilter.toUpperCase()}</span>
-                  <span className="text-lg ml-1">&times;</span>
+                  <span className="text-base md:text-lg ml-1">&times;</span>
                 </button>
               )}
               
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 flex items-center gap-1 transition-all"
+                  className="px-2 md:px-3 py-1 md:py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs md:text-sm hover:bg-blue-100 flex items-center gap-1 transition-all"
                 >
                   <span>Search: {searchTerm}</span>
-                  <span className="text-lg ml-1">&times;</span>
+                  <span className="text-base md:text-lg ml-1">&times;</span>
                 </button>
               )}
               
               {isFilterActive && (
                 <button
                   onClick={clearAllFilters}
-                  className="px-3 py-1.5 bg-red-50 text-red-600 rounded-full text-sm hover:bg-red-100 flex items-center gap-1 transition-all"
+                  className="px-2 md:px-3 py-1 md:py-1.5 bg-red-50 text-red-600 rounded-full text-xs md:text-sm hover:bg-red-100 flex items-center gap-1 transition-all"
                 >
-                  <HiX className="text-sm" />
+                  <HiX className="text-xs md:text-sm" />
                   Clear All
                 </button>
               )}
