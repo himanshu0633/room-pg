@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { sectorAPI } from '../services/api';
 import SectorModal from '../components/SectorModal';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiX } from 'react-icons/hi';
-
+import Navbar from '../components/Navbar';
 const SectorManagement = () => {
   const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +90,9 @@ const SectorManagement = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+    <Navbar />
+    <div className="container mx-auto px-4 py-8 dashboard-page">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -245,6 +247,7 @@ const SectorManagement = () => {
         sector={selectedSector}
       />
     </div>
+    </>
   );
 };
 

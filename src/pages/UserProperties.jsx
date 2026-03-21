@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HiHeart, HiCalendar, HiHome, HiBookmark, HiExclamationCircle } from 'react-icons/hi';
+import { HiHome, HiExclamationCircle, HiSearch } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { userAPI } from '../services/api';
 import { sectorAPI } from '../services/api';
 import UserPropertyCard from '../components/UserPropertyCard';
 import PropertyFilter from '../components/PropertyFilter';
 import Navbar from '../components/Navbar';
+
 const UserProperties = () => {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
-  const [savedProperties, setSavedProperties] = useState([]);
-  const [bookedProperties, setBookedProperties] = useState([]);
-  const [savedIds, setSavedIds] = useState(new Set());
   const [sectors, setSectors] = useState([]);
   const [cities, setCities] = useState(['Delhi', 'Jaipur', 'Gurgaon', 'Noida']);
   const [states, setStates] = useState(['Rajasthan', 'Haryana', 'Uttar Pradesh', 'Delhi']);
+  const [savedIds, setSavedIds] = useState(new Set());
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
 
@@ -60,10 +58,9 @@ const UserProperties = () => {
       const sectorsRes = await sectorAPI.getAll();
       setSectors(sectorsRes.data);
 
-      // Only fetch saved and booked if user is logged in
+      // Fetch saved IDs if user is logged in
       if (isLoggedIn()) {
-        await fetchSavedProperties();
-        await fetchBookedProperties();
+        await fetchSavedIds();
       }
       
     } catch (error) {
@@ -74,25 +71,14 @@ const UserProperties = () => {
     }
   };
 
-  const fetchSavedProperties = async () => {
+  const fetchSavedIds = async () => {
     try {
       const response = await userAPI.getMySavedProperties();
       const activeSaved = response.data.filter(item => item.property?.propertyStatus === 'active');
-      setSavedProperties(activeSaved);
       const ids = new Set(activeSaved.map(item => item.property._id));
       setSavedIds(ids);
     } catch (error) {
       console.error('Error fetching saved properties:', error);
-    }
-  };
-
-  const fetchBookedProperties = async () => {
-    try {
-      const response = await userAPI.getMyBookings();
-      const activeBooked = response.data.filter(item => item.property?.propertyStatus === 'active');
-      setBookedProperties(activeBooked);
-    } catch (error) {
-      console.error('Error fetching booked properties:', error);
     }
   };
 
@@ -151,151 +137,75 @@ const UserProperties = () => {
         return newSet;
       });
     }
-    await fetchSavedProperties();
+    // Refresh saved IDs
+    await fetchSavedIds();
   };
-
-  const handleBookProperty = async (propertyId) => {
-    // Check login status
-    if (!isLoggedIn()) {
-      handleLoginRequired('book', propertyId);
-      return;
-    }
-
-    // This will be handled by UserPropertyCard component
-    return true;
-  };
-
-  const getDisplayProperties = () => {
-    switch(activeTab) {
-      case 'saved':
-        return savedProperties.map(item => item.property);
-      case 'booked':
-        return bookedProperties.map(item => item.property);
-      default:
-        return filteredProperties;
-    }
-  };
-
-  const displayProperties = getDisplayProperties();
 
   return (
     <>
       <Navbar />
       <div className="container mx-auto px-4 py-8 user-properties-page">
         {/* Header */}
-        
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Find Your Perfect Property</h1>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Find Your Perfect Property
+          </h1>
           <p className="text-gray-600 mt-2">Browse and book properties that match your preferences</p>
         </div>
 
-        {/* Tabs - Only show saved/booked if logged in */}
-        <div className="flex gap-4 mb-6 border-b flex-wrap">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`pb-3 px-4 flex items-center gap-2 transition-colors ${
-              activeTab === 'all'
-                ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <HiHome className="text-lg" />
-            All Properties ({properties.length})
-          </button>
-          
-          {isLoggedIn() && (
-            <>
-              <button
-                onClick={() => setActiveTab('saved')}
-                className={`pb-3 px-4 flex items-center gap-2 transition-colors ${
-                  activeTab === 'saved'
-                    ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <HiHeart className="text-lg" />
-                Saved ({savedProperties.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('booked')}
-                className={`pb-3 px-4 flex items-center gap-2 transition-colors ${
-                  activeTab === 'booked'
-                    ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <HiCalendar className="text-lg" />
-                Booked ({bookedProperties.length})
-              </button>
-            </>
-          )}
+        {/* Simple Header with Count */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <HiHome className="text-blue-600 text-xl" />
+            <h2 className="text-xl font-semibold text-gray-800">All Properties</h2>
+            <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">
+              {filteredProperties.length} properties
+            </span>
+          </div>
+          <p className="text-gray-500 text-sm mt-1">Discover the best properties available for rent</p>
         </div>
 
-        {/* Filters - Only show on All Properties tab */}
-        {activeTab === 'all' && (
-          <PropertyFilter
-            onFilterChange={handleFilterChange}
-            sectors={sectors}
-            cities={cities}
-            states={states}
-          />
-        )}
-
-        {/* Login Required Message for Saved/Booked tabs when not logged in */}
-        {!isLoggedIn() && (activeTab === 'saved' || activeTab === 'booked') && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center mb-6">
-            <HiExclamationCircle className="text-4xl text-yellow-600 mx-auto mb-3" />
-            <p className="text-gray-700 text-lg mb-2">Login Required</p>
-            <p className="text-gray-500 mb-4">Please login to view your saved and booked properties</p>
-            <button
-              onClick={() => navigate('/auth')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Login Now
-            </button>
-          </div>
-        )}
+        {/* Filters */}
+        <PropertyFilter
+          onFilterChange={handleFilterChange}
+          sectors={sectors}
+          cities={cities}
+          states={states}
+        />
 
         {/* Properties Grid */}
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading properties...</p>
+            </div>
           </div>
-        ) : displayProperties.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-lg shadow-md">
-            <p className="text-gray-500 text-lg mb-4">
-              {activeTab === 'saved' 
-                ? "You haven't saved any properties yet" 
-                : activeTab === 'booked'
-                ? "You haven't booked any properties yet"
-                : 'No properties match your filters'}
-            </p>
-            {activeTab !== 'all' && isLoggedIn() && (
-              <button
-                onClick={() => setActiveTab('all')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Browse Properties
-              </button>
-            )}
-            {!isLoggedIn() && activeTab === 'all' && displayProperties.length === 0 && (
-              <Link
-                to="/auth"
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block"
-              >
-                Login to Save Properties
-              </Link>
-            )}
+        ) : filteredProperties.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-xl shadow-md">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <HiSearch className="text-3xl text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-lg mb-2">No properties found</p>
+            <p className="text-gray-400 mb-4">Try adjusting your search or filters</p>
+            <button
+              onClick={() => {
+                // Clear filters logic would go here
+                window.location.reload();
+              }}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayProperties.map(property => (
+            {filteredProperties.map(property => (
               <UserPropertyCard
                 key={property._id}
                 property={property}
                 isSaved={savedIds.has(property._id)}
                 onSaveToggle={handleSaveToggle}
-                onBookProperty={handleBookProperty}
                 isLoggedIn={isLoggedIn()}
                 onLoginRequired={handleLoginRequired}
               />
@@ -318,7 +228,7 @@ const UserProperties = () => {
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">Login Required</h3>
                   <p className="text-gray-600 mb-6">
-                    You need to be logged in to {pendingAction?.action === 'save' ? 'save properties' : 'book properties'}.
+                    You need to be logged in to {pendingAction?.action === 'save' ? 'save this property' : 'book this property'}.
                     Please login to continue.
                   </p>
                   <div className="flex gap-3">
@@ -356,9 +266,9 @@ const UserProperties = () => {
         .animate-fadeInUp {
           animation: fadeInUp 0.3s ease-out forwards;
         }
-          .user-properties-page{
+        .user-properties-page {
           margin-top: 80px;
-          }
+        }
       `}</style>
     </>
   );

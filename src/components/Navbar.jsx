@@ -66,7 +66,7 @@ const Navbar = () => {
     if (userRole === 'admin') {
       return [
         { name: 'Dashboard', path: '/admindashboard', icon: HiChartBar },
-        { name: 'Properties', path: '/properties', icon: HiHome },
+        { name: 'Bookings & Saved Properties', path: '/admin-bookings', icon: HiHome },
         { name: 'Add Property', path: '/properties/add', icon: HiPlus },
         { name: 'Sectors', path: '/sectors', icon: HiOfficeBuilding }
       ];
@@ -216,12 +216,12 @@ const Navbar = () => {
                               <span>Dashboard</span>
                             </Link>
                             <Link
-                              to="/properties"
+                              to="/admin-bookings"
                               onClick={() => setIsDropdownOpen(false)}
                               className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                             >
                               <HiHome className="text-gray-500" />
-                              <span>All Properties</span>
+                              <span>Bookings & Saved Properties</span>
                             </Link>
                             <Link
                               to="/properties/add"

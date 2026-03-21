@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { propertyAPI } from '../services/api';
 import PropertyList from '../components/PropertyList';
+import Navbar from '../components/Navbar';
 import { 
   HiPlus, HiHome, HiPhotograph, HiUsers, HiOfficeBuilding,
   HiChartBar, HiTrendingUp, HiTrendingDown, HiRefresh,
@@ -139,8 +140,9 @@ const Dashboard = () => {
 
   const activePercentage = stats.total > 0 ? ((stats.active / stats.total) * 100).toFixed(0) : 0;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+  return (<>
+    <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dashboard-page">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -420,6 +422,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

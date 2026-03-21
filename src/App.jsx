@@ -14,7 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import MyBookings from './pages/MyBookings';
 import SavedProperties from './pages/SavedProperties';
-
+import AdminBookings from './pages/AdminBookings'
 function App() {
   return (
     <Router>
@@ -72,6 +72,12 @@ function App() {
           <Route path="/sectors" element={
             <RoleBasedRoute allowedRoles={['admin']}>
               <SectorManagement />
+            </RoleBasedRoute>
+          } />
+
+          <Route path="/admin-bookings" element={
+            <RoleBasedRoute allowedRoles={['admin']}>
+              <AdminBookings />
             </RoleBasedRoute>
           } />
           

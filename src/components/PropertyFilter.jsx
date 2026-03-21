@@ -75,13 +75,13 @@ const PropertyFilter = ({ onFilterChange, sectors: propSectors = [], cities = []
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-4 border-b">
+      {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-4 border-b">
         <div className="flex items-center gap-2">
           <HiFilter className="text-blue-600 text-lg" />
           <h3 className="text-lg font-semibold text-gray-800">Find Properties</h3>
         </div>
         <p className="text-sm text-gray-500 mt-1">Search and filter properties to find your perfect match</p>
-      </div>
+      </div> */}
 
       {/* Search Bar */}
       <div className="p-5">

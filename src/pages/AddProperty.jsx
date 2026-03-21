@@ -2,10 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { HiArrowLeft } from 'react-icons/hi';
 import PropertyForm from '../components/PropertyForm';
-
+import Navbar from '../components/Navbar';
 const AddProperty = () => {
   return (
-    <div className="container mx-auto px-4 py-8">
+      <>
+    <Navbar />
+    <div className="container mx-auto px-4 py-8 dashboard-page">
+    
       {/* Header */}
       <div className="mb-6">
         <Link
@@ -22,6 +25,7 @@ const AddProperty = () => {
       {/* Form */}
       <PropertyForm />
     </div>
+    </>
   );
 };
 
