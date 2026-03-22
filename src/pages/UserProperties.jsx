@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiHome, HiExclamationCircle, HiSearch } from 'react-icons/hi';
 import toast from 'react-hot-toast';
@@ -14,8 +14,8 @@ const UserProperties = () => {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sectors, setSectors] = useState([]);
-  const [cities, setCities] = useState(['Delhi', 'Jaipur', 'Gurgaon', 'Noida']);
-  const [states, setStates] = useState(['Rajasthan', 'Haryana', 'Uttar Pradesh', 'Delhi']);
+  const [cities] = useState(['Delhi', 'Jaipur', 'Gurgaon', 'Noida']);
+  const [states] = useState(['Rajasthan', 'Haryana', 'Uttar Pradesh', 'Delhi']);
   const [savedIds, setSavedIds] = useState(new Set());
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
@@ -42,11 +42,18 @@ const UserProperties = () => {
     setPendingAction(null);
   };
 
-  useEffect(() => {
-    fetchAllData();
+  const fetchSavedIds = useCallback(async () => {
+    try {
+      const response = await userAPI.getMySavedProperties();
+      const activeSaved = response.data.filter(item => item.property?.propertyStatus === 'active');
+      const ids = new Set(activeSaved.map(item => item.property._id));
+      setSavedIds(ids);
+    } catch (error) {
+      console.error('Error fetching saved properties:', error);
+    }
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -69,18 +76,11 @@ const UserProperties = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchSavedIds]);
 
-  const fetchSavedIds = async () => {
-    try {
-      const response = await userAPI.getMySavedProperties();
-      const activeSaved = response.data.filter(item => item.property?.propertyStatus === 'active');
-      const ids = new Set(activeSaved.map(item => item.property._id));
-      setSavedIds(ids);
-    } catch (error) {
-      console.error('Error fetching saved properties:', error);
-    }
-  };
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleFilterChange = (filters) => {
     let filtered = [...properties];

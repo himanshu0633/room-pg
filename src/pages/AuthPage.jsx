@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { 
   HiMail, HiLockClosed, HiUser, HiPhone, HiPhotograph, 
   HiEye, HiEyeOff, HiArrowRight, HiCheckCircle, HiXCircle 
@@ -21,7 +21,6 @@ const AuthPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
 
   // Form states
   const [loginData, setLoginData] = useState({
@@ -50,19 +49,6 @@ const AuthPage = () => {
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  // Handle photo upload
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProfilePhoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -222,7 +208,7 @@ const AuthPage = () => {
               <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-white rounded-full opacity-10"></div>
               
               <div className="relative z-10">
-                <motion.div
+                <div
                   initial={{ y: -50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -235,9 +221,9 @@ const AuthPage = () => {
                       ? 'Sign in to access your account and manage your properties'
                       : 'Create an account to start your property journey'}
                   </p>
-                </motion.div>
+                </div>
 
-                <motion.div
+                <div
                   initial={{ y: 50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
@@ -261,7 +247,7 @@ const AuthPage = () => {
                     </div>
                     <span className="text-sm md:text-base">Get instant notifications</span>
                   </div>
-                </motion.div>
+                </div>
               </div>
 
               <div className="relative z-10 mt-8 md:mt-12">
@@ -274,7 +260,7 @@ const AuthPage = () => {
             {/* Right Side - Form */}
             <div className="lg:w-1/2 p-6 md:p-8 lg:p-12">
               <AnimatePresence mode="wait">
-                <motion.div
+                <div
                   key={isLogin ? 'login' : 'register'}
                   variants={pageVariants}
                   initial="initial"
@@ -538,7 +524,6 @@ const AuthPage = () => {
                         onClick={() => {
                           setIsLogin(!isLogin);
                           setErrors({});
-                          setPhotoPreview(null);
                           setProfilePhoto(null);
                         }}
                         className="text-blue-600 font-semibold hover:text-blue-800 hover:underline transition-colors"
@@ -547,7 +532,7 @@ const AuthPage = () => {
                       </button>
                     </p>
                   </div>
-                </motion.div>
+                </div>
               </AnimatePresence>
             </div>
           </div>

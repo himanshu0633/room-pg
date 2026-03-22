@@ -134,15 +134,6 @@ const PropertyForm = ({ propertyId, initialData = null }) => {
     }));
   };
 
-  const handleBachelorTypeChange = (type) => {
-    setFormData(prev => ({
-      ...prev,
-      bachelorTypes: prev.bachelorTypes.includes(type)
-        ? prev.bachelorTypes.filter(t => t !== type)
-        : [...prev.bachelorTypes, type]
-    }));
-  };
-
   const addFeature = () => {
     if (newFeature.trim()) {
       setFormData(prev => ({
@@ -193,7 +184,7 @@ const PropertyForm = ({ propertyId, initialData = null }) => {
           ...prev,
           files: prev.files.filter(f => f.filename !== filename)
         }));
-      } catch (error) {
+      } catch {
         toast.error('Failed to remove file');
       }
     } else {
@@ -581,6 +572,7 @@ const PropertyForm = ({ propertyId, initialData = null }) => {
 
       {/* Sector Modal */}
       <SectorModal
+        key={`${selectedSector?._id || 'new'}-${modalOpen ? 'open' : 'closed'}`}
         isOpen={modalOpen}
         onClose={handleCloseModal}
         onSave={handleSectorSave}

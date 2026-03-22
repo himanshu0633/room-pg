@@ -7,7 +7,7 @@ import {
   HiShieldCheck, HiTrendingUp, HiChat, HiPhotograph, HiLogout,
   HiChevronDown,HiChartBar, HiPlus
 } from 'react-icons/hi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { authAPI, userAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -312,7 +312,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <motion.div
+            <div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
@@ -325,7 +325,7 @@ const LandingPage = () => {
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 PropertyFinder
               </span>
-            </motion.div>
+            </div>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-8">
@@ -352,7 +352,7 @@ const LandingPage = () => {
                   
                   <AnimatePresence>
                     {isDropdownOpen && (
-                      <motion.div
+                      <div
                         initial={{ opacity: 0, y: -10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -393,7 +393,7 @@ const LandingPage = () => {
                             <span>Logout</span>
                           </button>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
                   </AnimatePresence>
                 </div>
@@ -411,19 +411,19 @@ const LandingPage = () => {
         
         <div className="container mx-auto relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
+            <div
               initial="hidden"
               animate="visible"
               variants={fadeInUp}
             >
-              <motion.div
+              <div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
                 className="inline-block px-4 py-2 bg-blue-100 text-blue-600 rounded-full mb-6"
               >
                 🏠 Find Your Dream Home
-              </motion.div>
+              </div>
               <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
                 Find Your Perfect
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Property</span>
@@ -441,9 +441,9 @@ const LandingPage = () => {
                   <HiArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
+            <div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
@@ -463,7 +463,7 @@ const LandingPage = () => {
               </div>
               
               {/* Floating Stats */}
-              <motion.div
+              <div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
@@ -478,9 +478,9 @@ const LandingPage = () => {
                     <p className="text-sm text-gray-500">Properties</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
               
-              <motion.div
+              <div
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7, duration: 0.5 }}
@@ -495,8 +495,8 @@ const LandingPage = () => {
                     <p className="text-sm text-gray-500">Happy Tenants</p>
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -504,7 +504,7 @@ const LandingPage = () => {
       {/* Stats Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600">
         <div className="container mx-auto px-4">
-          <motion.div
+          <div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -512,7 +512,7 @@ const LandingPage = () => {
             className="grid grid-cols-2 md:grid-cols-4 gap-8"
           >
             {stats.map((stat, index) => (
-              <motion.div
+              <div
                 key={index}
                 variants={fadeInUp}
                 className="text-center text-white"
@@ -522,16 +522,16 @@ const LandingPage = () => {
                 </div>
                 <p className="text-3xl md:text-4xl font-bold mb-2">{stat.number}</p>
                 <p className="text-sm opacity-90">{stat.label}</p>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Featured Properties Section */}
       <section id="properties" className="py-20 px-4">
         <div className="container mx-auto">
-          <motion.div
+          <div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -544,7 +544,7 @@ const LandingPage = () => {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Discover our most popular PG accommodations and rental rooms
             </p>
-          </motion.div>
+          </div>
 
           {loading ? (
             <div className="flex justify-center items-center min-h-[400px]">
@@ -557,7 +557,7 @@ const LandingPage = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredProperties.map((property, index) => (
-                <motion.div
+                <div
                   key={property._id}
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -639,7 +639,7 @@ const LandingPage = () => {
                       </Link>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
@@ -659,7 +659,7 @@ const LandingPage = () => {
       {/* Features Section */}
       <section id="features" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto">
-          <motion.div
+          <div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -672,9 +672,9 @@ const LandingPage = () => {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               We make property search and rental management simple, transparent, and hassle-free
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
+          <div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -682,7 +682,7 @@ const LandingPage = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {features.map((feature, index) => (
-              <motion.div
+              <div
                 key={index}
                 variants={fadeInUp}
                 whileHover={{ y: -10 }}
@@ -693,16 +693,16 @@ const LandingPage = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* How It Works */}
       <section className="py-20 px-4">
         <div className="container mx-auto">
-          <motion.div
+          <div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -713,7 +713,7 @@ const LandingPage = () => {
               How It <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Works</span>
             </h2>
             <p className="text-lg text-gray-600">Simple steps to find your perfect property</p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -721,7 +721,7 @@ const LandingPage = () => {
               { step: "02", title: "Compare", description: "Compare multiple properties and save favorites", icon: HiStar, color: "from-purple-500 to-purple-600" },
               { step: "03", title: "Book", description: "Book your favorite property online", icon: HiCalendar, color: "from-green-500 to-green-600" }
             ].map((item, index) => (
-              <motion.div
+              <div
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -737,7 +737,7 @@ const LandingPage = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">{item.title}</h3>
                 <p className="text-gray-600">{item.description}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -746,7 +746,7 @@ const LandingPage = () => {
       {/* Testimonials */}
       <section id="testimonials" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto">
-          <motion.div
+          <div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -757,11 +757,11 @@ const LandingPage = () => {
               What Our <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Clients Say</span>
             </h2>
             <p className="text-lg text-gray-600">Trusted by thousands of happy tenants and property owners</p>
-          </motion.div>
+          </div>
 
           <div className="relative max-w-4xl mx-auto">
             <AnimatePresence mode="wait">
-              <motion.div
+              <div
                 key={activeTestimonial}
                 initial={{ opacity: 0, x: 100 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -787,7 +787,7 @@ const LandingPage = () => {
                     <p className="text-xs text-gray-400 mt-1">{testimonials[activeTestimonial].location}</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </AnimatePresence>
 
             <div className="flex justify-center gap-2 mt-8">
@@ -806,7 +806,7 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-indigo-600">
         <div className="container mx-auto text-center">
-          <motion.div
+          <div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -834,7 +834,7 @@ const LandingPage = () => {
                 </Link>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
