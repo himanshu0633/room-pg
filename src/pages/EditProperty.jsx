@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { HiArrowLeft } from 'react-icons/hi';
 import toast from 'react-hot-toast';
@@ -11,11 +11,7 @@ const EditProperty = () => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProperty();
-  }, [id]);
-
-  const fetchProperty = async () => {
+  const fetchProperty = useCallback(async () => {
     try {
       setLoading(true);
       const response = await propertyAPI.getById(id);
@@ -27,7 +23,11 @@ const EditProperty = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    fetchProperty();
+  }, [fetchProperty]);
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { 
   HiArrowLeft, HiPencil, HiTrash, HiPhotograph, HiDocument, 
@@ -57,17 +57,19 @@ const PropertyDetails = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchProperty();
-  }, [id]);
-
-  useEffect(() => {
-    if (property && currentUser && currentUser.role !== 'admin') {
-      checkSavedStatus();
+  const fetchSectorDetails = useCallback(async (sectorId) => {
+    try {
+      setFetchingSector(true);
+      const response = await sectorAPI.getById(sectorId);
+      setSectorDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching sector details:', error);
+    } finally {
+      setFetchingSector(false);
     }
-  }, [property, currentUser]);
+  }, []);
 
-  const fetchProperty = async () => {
+  const fetchProperty = useCallback(async () => {
     try {
       setLoading(true);
       const response = await propertyAPI.getById(id);
@@ -88,28 +90,26 @@ const PropertyDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchSectorDetails, id, navigate]);
 
-  const fetchSectorDetails = async (sectorId) => {
-    try {
-      setFetchingSector(true);
-      const response = await sectorAPI.getById(sectorId);
-      setSectorDetails(response.data);
-    } catch (error) {
-      console.error('Error fetching sector details:', error);
-    } finally {
-      setFetchingSector(false);
-    }
-  };
-
-  const checkSavedStatus = async () => {
+  const checkSavedStatus = useCallback(async () => {
     try {
       const response = await userAPI.checkSavedStatus(id);
       setIsSaved(response.saved);
     } catch (error) {
       console.error('Error checking saved status:', error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchProperty();
+  }, [fetchProperty]);
+
+  useEffect(() => {
+    if (property && currentUser && currentUser.role !== 'admin') {
+      checkSavedStatus();
+    }
+  }, [property, currentUser, checkSavedStatus]);
 
   const handleLoginRequired = (action) => {
     setPendingAction(action);

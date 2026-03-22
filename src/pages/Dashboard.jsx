@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { propertyAPI } from '../services/api';
@@ -33,33 +33,7 @@ const Dashboard = () => {
   }, []);
 
   // Apply filters whenever properties or filters change
-  useEffect(() => {
-    applyFilters();
-  }, [properties, statusFilter, typeFilter, searchTerm]);
-
-  const fetchProperties = async () => {
-    try {
-      setLoading(true);
-      const response = await propertyAPI.getAll();
-      setProperties(response.data);
-      
-      // Calculate stats
-      const total = response.data.length;
-      const active = response.data.filter(p => p.propertyStatus === 'active').length;
-      const inactive = response.data.filter(p => p.propertyStatus === 'deactive' || p.propertyStatus === 'inactive').length;
-      const pg = response.data.filter(p => p.propertyType?.toLowerCase() === 'pg').length;
-      const room = response.data.filter(p => p.propertyType?.toLowerCase() === 'room').length;
-      
-      setStats({ total, active, inactive, pg, room });
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-      toast.error('Failed to load properties');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...properties];
     
     // Apply search filter
@@ -88,6 +62,32 @@ const Dashboard = () => {
     }
     
     setFilteredProperties(filtered);
+  }, [properties, searchTerm, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const response = await propertyAPI.getAll();
+      setProperties(response.data);
+      
+      // Calculate stats
+      const total = response.data.length;
+      const active = response.data.filter(p => p.propertyStatus === 'active').length;
+      const inactive = response.data.filter(p => p.propertyStatus === 'deactive' || p.propertyStatus === 'inactive').length;
+      const pg = response.data.filter(p => p.propertyType?.toLowerCase() === 'pg').length;
+      const room = response.data.filter(p => p.propertyType?.toLowerCase() === 'room').length;
+      
+      setStats({ total, active, inactive, pg, room });
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      toast.error('Failed to load properties');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStatusFilter = (status) => {

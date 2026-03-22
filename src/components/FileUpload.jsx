@@ -9,7 +9,6 @@ import toast from 'react-hot-toast';
 
 const FileUpload = ({ files, onFileChange, onRemoveFile, existingFiles = [] }) => {
   const [previewImage, setPreviewImage] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState({});
   const baseURL = import.meta.env.VITE_API_URL_IMG || 'http://localhost:4000';
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
