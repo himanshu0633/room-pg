@@ -6,7 +6,7 @@ import {
   HiCheckCircle, HiXCircle, HiOfficeBuilding, HiMap, 
   HiHeart, HiOutlineHeart, HiBookmark, HiCalendar as HiCalendarIcon,
   HiStar, HiShare, HiExternalLink, HiPhone, HiMail, HiClock, HiLockClosed,
-  HiExclamationCircle, HiRefresh
+  HiExclamationCircle, HiRefresh, HiX, HiInformationCircle
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -32,9 +32,13 @@ const PropertyDetails = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [bookingData, setBookingData] = useState({
-    visitDate: '',
+    duration: '',
+    durationType: '',
+    startDate: '',
     notes: ''
   });
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [pricePerUnit, setPricePerUnit] = useState(0);
 
   const baseURL = import.meta.env.VITE_API_URL_IMG || 'http://localhost:4000';
 
@@ -154,18 +158,78 @@ const PropertyDetails = () => {
     setShowBookingModal(true);
   };
 
+  const getBookingType = useCallback(() => {
+    if (property?.propertyType === 'pg') return 'months';
+    if (property?.propertyType === 'room') return 'days';
+    return 'months';
+  }, [property?.propertyType]);
+
+  const getPricePerUnit = useCallback(() => {
+    if (property?.propertyType === 'pg') return property?.mrp || 0;
+    if (property?.propertyType === 'room') return Math.round((property?.mrp || 0) / 30);
+    return property?.mrp || 0;
+  }, [property?.mrp, property?.propertyType]);
+
+  const getDailyRate = () => {
+    if (property?.propertyType === 'room') {
+      return Math.round((property?.mrp || 0) / 30);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (!property?.mrp || !bookingData.duration) {
+      setTotalAmount(0);
+      return;
+    }
+
+    const perUnit = getPricePerUnit();
+    const amount = perUnit * Number(bookingData.duration);
+
+    setTotalAmount(Math.round(amount));
+    setPricePerUnit(perUnit);
+  }, [bookingData.duration, bookingData.durationType, property?.mrp, getPricePerUnit]);
+
+  useEffect(() => {
+    if (showBookingModal) {
+      setBookingData({
+        duration: '',
+        durationType: getBookingType(),
+        startDate: '',
+        notes: ''
+      });
+      setTotalAmount(0);
+    }
+  }, [showBookingModal, getBookingType]);
+
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
+
+    if (!bookingData.duration || !bookingData.startDate) {
+      toast.error('Please fill all required booking details');
+      return;
+    }
+
     setBooking(true);
     try {
       await userAPI.createBooking({
         propertyId: id,
-        visitDate: bookingData.visitDate || undefined,
+        duration: Number(bookingData.duration),
+        durationType: bookingData.durationType,
+        startDate: bookingData.startDate,
+        totalAmount,
+        pricePerUnit,
         notes: bookingData.notes || undefined
       });
-      toast.success('Property booked successfully! We will contact you soon.');
+      const durationTypeText = bookingData.durationType === 'months' ? 'month(s)' : 'day(s)';
+      toast.success(`Booking request sent for ${bookingData.duration} ${durationTypeText}! Admin will review and confirm.`);
       setShowBookingModal(false);
-      setBookingData({ visitDate: '', notes: '' });
+      setBookingData({
+        duration: '',
+        durationType: getBookingType(),
+        startDate: '',
+        notes: ''
+      });
     } catch (error) {
       console.error('Error booking property:', error);
       toast.error(error.response?.data?.message || 'Failed to book property');
@@ -220,6 +284,41 @@ const PropertyDetails = () => {
         {type?.toUpperCase()}
       </span>
     );
+  };
+
+  const bookingType = getBookingType();
+  const isMonthlyBooking = bookingType === 'months';
+  const unitLabel = isMonthlyBooking ? 'months' : 'days';
+  const dailyRate = getDailyRate();
+
+  const getMinDate = () => new Date().toISOString().split('T')[0];
+
+  const getEndDatePreview = () => {
+    if (!bookingData.startDate || !bookingData.duration) return null;
+    const startDate = new Date(bookingData.startDate);
+    const endDate = new Date(startDate);
+
+    if (bookingData.durationType === 'months') {
+      endDate.setMonth(endDate.getMonth() + Number(bookingData.duration));
+    } else {
+      endDate.setDate(endDate.getDate() + Number(bookingData.duration));
+    }
+
+    return format(endDate, 'dd MMM yyyy');
+  };
+
+  const getDurationLabel = () => {
+    if (property?.propertyType === 'pg') return 'Number of Months';
+    if (property?.propertyType === 'room') return 'Number of Days';
+    return 'Duration';
+  };
+
+  const getPriceBreakdown = () => {
+    if (!bookingData.duration || !property?.mrp) return '';
+    if (bookingData.durationType === 'months') {
+      return `₹${property.mrp?.toLocaleString()} × ${bookingData.duration} month(s)`;
+    }
+    return `₹${pricePerUnit.toLocaleString()} × ${bookingData.duration} day(s)`;
   };
 
   const getBackPath = () => {
@@ -765,37 +864,103 @@ const PropertyDetails = () => {
         {/* Booking Modal */}
         {showBookingModal && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowBookingModal(false)} />
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setShowBookingModal(false)} />
             <div className="flex min-h-full items-center justify-center p-4">
-              <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full animate-slideUp">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900">Book Property</h3>
+              <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all animate-fadeInUp">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white mb-1">Book Property</h3>
+                      <p className="text-blue-100 text-sm">{property.address}, {property.city}</p>
+                    </div>
                     <button
                       onClick={() => setShowBookingModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-white hover:text-gray-200 transition-colors"
                     >
-                      <HiXCircle className="text-2xl" />
+                      <HiX className="text-2xl" />
                     </button>
                   </div>
-                  <p className="text-gray-600 mb-4 pb-4 border-b">
-                    {property.address}, {property.city}
-                  </p>
+                </div>
+                
+                <div className="p-6">
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">
+                        {property.propertyType === 'pg' ? 'Monthly Rent:' : 'Daily Rent:'}
+                      </span> 
+                      {property.propertyType === 'pg' ? (
+                        <> ₹{property.mrp?.toLocaleString()}/month</>
+                      ) : (
+                        <> ₹{dailyRate?.toLocaleString()}/day (₹{property.mrp?.toLocaleString()}/month)</>
+                      )}
+                    </p>
+                    {property.security > 0 && (
+                      <p className="text-sm text-blue-800 mt-1">
+                        <span className="font-semibold">Security:</span> ₹{property.security?.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
                   
                   <form onSubmit={handleBookingSubmit}>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Preferred Visit Date
+                          {getDurationLabel()} <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            value={bookingData.duration}
+                            onChange={(e) => setBookingData({ ...bookingData, duration: e.target.value })}
+                            placeholder={`Enter number of ${unitLabel}`}
+                            min="1"
+                            step="1"
+                            required
+                            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                          />
+                          <div className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                            {isMonthlyBooking ? 'Months' : 'Days'}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {property.propertyType === 'pg' 
+                            ? 'Monthly rental basis - minimum 1 month' 
+                            : 'Daily rental basis - flexible duration'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Date <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
-                          value={bookingData.visitDate}
-                          onChange={(e) => setBookingData({ ...bookingData, visitDate: e.target.value })}
-                          min={new Date().toISOString().split('T')[0]}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={bookingData.startDate}
+                          onChange={(e) => setBookingData({ ...bookingData, startDate: e.target.value })}
+                          min={getMinDate()}
+                          required
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                         />
                       </div>
+
+                      {getEndDatePreview() && (
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">End Date:</span> {getEndDatePreview()}
+                          </p>
+                        </div>
+                      )}
+
+                      {totalAmount > 0 && (
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <p className="text-sm text-green-800">
+                            <span className="font-semibold">Total Amount:</span> ₹{totalAmount.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-green-600 mt-1">
+                            {getPriceBreakdown()}
+                          </p>
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -805,9 +970,19 @@ const PropertyDetails = () => {
                           value={bookingData.notes}
                           onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
                           placeholder="Any specific requirements or questions..."
-                          rows="4"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
                         />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
+                      <div className="flex gap-2">
+                        <HiInformationCircle className="text-yellow-600 text-lg flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-yellow-700">
+                          Your booking request will be sent to the admin for approval. 
+                          You will be notified once it's confirmed.
+                        </p>
                       </div>
                     </div>
 
@@ -815,16 +990,26 @@ const PropertyDetails = () => {
                       <button
                         type="button"
                         onClick={() => setShowBookingModal(false)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all font-medium"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        disabled={booking}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        disabled={booking || !bookingData.duration || !bookingData.startDate}
+                        className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
-                        {booking ? 'Booking...' : 'Confirm Booking'}
+                        {booking ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <HiCheckCircle className="text-lg" />
+                            <span>Send Request</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </form>
