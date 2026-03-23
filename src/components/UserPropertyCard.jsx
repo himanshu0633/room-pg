@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   HiHeart, HiOutlineHeart, HiCalendar, HiLocationMarker, 
@@ -47,24 +47,24 @@ const UserPropertyCard = ({
   };
 
   // Determine booking type based on property type
-  const getBookingType = () => {
+  const getBookingType = useCallback(() => {
     if (property.propertyType === 'pg') {
       return 'months';
     } else if (property.propertyType === 'room') {
       return 'days';
     }
     return 'months';
-  };
+  }, [property.propertyType]);
 
   // Get price per unit based on property type
-  const getPricePerUnit = () => {
+  const getPricePerUnit = useCallback(() => {
     if (property.propertyType === 'pg') {
       return property.mrp; // Monthly price
     } else if (property.propertyType === 'room') {
       return Math.round(property.mrp / 30); // Daily price
     }
     return property.mrp;
-  };
+  }, [property.mrp, property.propertyType]);
 
   // Get daily rate for room
   const getDailyRate = () => {
@@ -91,7 +91,7 @@ const UserPropertyCard = ({
     } else {
       setTotalAmount(0);
     }
-  }, [bookingData.duration, bookingData.durationType, property.mrp, property.propertyType]);
+  }, [bookingData.duration, bookingData.durationType, property.mrp, getBookingType, getPricePerUnit]);
 
   // Reset booking data when modal opens
   useEffect(() => {
@@ -105,7 +105,7 @@ const UserPropertyCard = ({
       });
       setTotalAmount(0);
     }
-  }, [showBookingModal, property.propertyType]);
+  }, [showBookingModal, getBookingType]);
 
   // Get all images from property
   useEffect(() => {

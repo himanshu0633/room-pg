@@ -1,30 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { HiX } from 'react-icons/hi';
 
 const SectorModal = ({ isOpen, onClose, onSave, sector }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    status: 'active'
+  const getInitialFormData = () => ({
+    name: sector?.name || '',
+    description: sector?.description || '',
+    status: sector?.status || 'active'
   });
+  const [formData, setFormData] = useState(getInitialFormData);
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (sector) {
-      setFormData({
-        name: sector.name || '',
-        description: sector.description || '',
-        status: sector.status || 'active'
-      });
-    } else {
-      setFormData({
-        name: '',
-        description: '',
-        status: 'active'
-      });
-    }
-    setErrors({});
-  }, [sector, isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

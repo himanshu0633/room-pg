@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiCalendar, HiLocationMarker, HiCurrencyRupee, HiXCircle, 
@@ -21,24 +21,7 @@ const MyBookings = () => {
     fetchBookings();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [bookings, statusFilter, searchTerm]);
-
-  const fetchBookings = async () => {
-    try {
-      setLoading(true);
-      const response = await userAPI.getMyBookings();
-      setBookings(response.data);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-      toast.error('Failed to load bookings');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...bookings];
     
     // Apply status filter
@@ -59,6 +42,23 @@ const MyBookings = () => {
     }
     
     setFilteredBookings(filtered);
+  }, [bookings, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await userAPI.getMyBookings();
+      setBookings(response.data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Failed to load bookings');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelBooking = async (bookingId) => {

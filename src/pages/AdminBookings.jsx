@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { HiCheckCircle, HiXCircle, HiClock, HiEye, HiCurrencyRupee, HiUser, HiHome, 
   HiSearch, HiFilter, HiX, HiRefresh, HiChevronDown, HiChevronUp, HiDocumentText,
   HiCalendar, HiLocationMarker, HiPhone, HiMail, HiOutlineSearch, HiOfficeBuilding } from 'react-icons/hi';
@@ -38,15 +38,6 @@ const AdminBookings = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    filterBookings();
-    filterSavedProperties();
-  }, [searchTerm, statusFilter, bookings, savedProperties, selectedCities, selectedStates, selectedDurationTypes, priceRange, dateRange, filterType]);
-
-  useEffect(() => {
-    filterSavedProperties();
-  }, [savedFilterType]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -85,7 +76,7 @@ const AdminBookings = () => {
     return [...new Set(types)];
   };
 
-  const filterBookings = () => {
+  const filterBookings = useCallback(() => {
     let filtered = [...bookings];
     
     // Search filter
@@ -152,9 +143,9 @@ const AdminBookings = () => {
     }
     
     setFilteredBookings(filtered);
-  };
+  }, [bookings, dateRange.end, dateRange.start, filterType, priceRange.max, priceRange.min, searchTerm, selectedCities, selectedDurationTypes, selectedStates, statusFilter]);
 
-  const filterSavedProperties = () => {
+  const filterSavedProperties = useCallback(() => {
     let filtered = [...savedProperties];
     
     // Search filter
@@ -201,7 +192,12 @@ const AdminBookings = () => {
     }
     
     setFilteredSaved(filtered);
-  };
+  }, [priceRange.max, priceRange.min, savedFilterType, savedProperties, searchTerm, selectedCities, selectedStates]);
+
+  useEffect(() => {
+    filterBookings();
+    filterSavedProperties();
+  }, [filterBookings, filterSavedProperties]);
 
   const clearCardFilters = () => {
     setSelectedCities([]);

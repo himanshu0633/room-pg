@@ -371,7 +371,7 @@ const SectorManagement = () => {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
-                  {filteredSectors.map((sector, index) => (
+                  {filteredSectors.map((sector) => (
                     <div key={sector._id} className="p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
@@ -430,6 +430,7 @@ const SectorManagement = () => {
 
           {/* Modal */}
           <SectorModal
+            key={`${selectedSector?._id || 'new'}-${modalOpen ? 'open' : 'closed'}`}
             isOpen={modalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}

@@ -6,7 +6,7 @@ import {
   HiBell, HiSearch, HiChevronDown, HiUserCircle,
   HiLocationMarker, HiCurrencyRupee, HiStar
 } from 'react-icons/hi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -27,11 +27,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    checkAuth();
-  }, [location]);
-
-  const checkAuth = () => {
+  function checkAuth() {
     const token = authAPI.getToken();
     const user = authAPI.getCurrentUser();
     
@@ -44,7 +40,14 @@ const Navbar = () => {
       setCurrentUser(null);
       setUserRole(null);
     }
-  };
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkAuth();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [location]);
 
   const handleLogout = () => {
     authAPI.logout();
@@ -91,7 +94,7 @@ const Navbar = () => {
   };
 
   // Mobile Footer Component
-  const MobileFooter = () => {
+  const renderMobileFooter = () => {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return null;
 
@@ -257,7 +260,7 @@ const Navbar = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <motion.div
+            <div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
@@ -270,12 +273,12 @@ const Navbar = () => {
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 PropertyFinder
               </span>
-            </motion.div>
+            </div>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-6">
               {navLinks.map((link, index) => (
-                <motion.div
+                <div
                   key={index}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -292,12 +295,12 @@ const Navbar = () => {
                     <link.icon className="text-lg" />
                     <span>{link.name}</span>
                   </Link>
-                </motion.div>
+                </div>
               ))}
 
               {/* Auth Section - Desktop */}
               {!isAuthenticated ? (
-                <motion.div
+                <div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex gap-3"
@@ -308,9 +311,9 @@ const Navbar = () => {
                   >
                     Login
                   </Link>
-                </motion.div>
+                </div>
               ) : (
-                <motion.div
+                <div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="relative"
@@ -336,7 +339,7 @@ const Navbar = () => {
                   {/* Desktop Dropdown */}
                   <AnimatePresence>
                     {isDropdownOpen && (
-                      <motion.div
+                      <div
                         initial={{ opacity: 0, y: -10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -423,10 +426,10 @@ const Navbar = () => {
                             <span>Logout</span>
                           </button>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </div>
               )}
             </div>
           </div>
@@ -434,7 +437,7 @@ const Navbar = () => {
       </nav>
 
       {/* Mobile Footer */}
-      <MobileFooter />
+      {renderMobileFooter()}
 
       <style jsx>{`
         @keyframes slideUp {
