@@ -89,9 +89,28 @@ const PropertyList = ({ properties, loading, onDelete, onRefresh }) => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-3 border-blue-600 mb-4"></div>
-        <p className="text-gray-500">Loading properties...</p>
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+          <div className="h-5 w-44 bg-gray-200 rounded animate-pulse mb-3"></div>
+          <div className="h-10 w-full bg-gray-100 rounded-lg animate-pulse"></div>
+        </div>
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="h-56 bg-gray-200 animate-pulse"></div>
+              <div className="p-4 space-y-3">
+                <div className="h-5 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse"></div>
+                <div className="h-6 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-8 bg-gray-100 rounded animate-pulse"></div>
+                  <div className="h-8 bg-gray-100 rounded animate-pulse"></div>
+                </div>
+                <div className="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

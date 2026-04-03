@@ -440,6 +440,29 @@ const LandingPage = () => {
                   Explore Properties
                   <HiArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </Link>
+                <Link
+                  to="/login"
+                  className="px-8 py-3 bg-white/80 backdrop-blur border border-gray-200 text-gray-800 rounded-full hover:bg-white hover:shadow-lg transition-all text-center"
+                >
+                  Start Free Account
+                </Link>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-white/80 backdrop-blur-md border border-white rounded-2xl px-4 py-3 shadow-sm">
+                  <p className="text-xs text-gray-500">Trust score</p>
+                  <p className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                    <HiShieldCheck className="text-emerald-600" /> Verified listings
+                  </p>
+                </div>
+                <div className="bg-white/80 backdrop-blur-md border border-white rounded-2xl px-4 py-3 shadow-sm">
+                  <p className="text-xs text-gray-500">Fast response</p>
+                  <p className="text-sm font-semibold text-gray-800">Avg. owner reply in 15 mins</p>
+                </div>
+                <div className="bg-white/80 backdrop-blur-md border border-white rounded-2xl px-4 py-3 shadow-sm">
+                  <p className="text-xs text-gray-500">Coverage</p>
+                  <p className="text-sm font-semibold text-gray-800">Delhi NCR • Jaipur • More</p>
+                </div>
               </div>
             </div>
 

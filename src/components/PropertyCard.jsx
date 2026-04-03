@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiPencil, HiTrash, HiEye, HiLocationMarker, HiCurrencyRupee, 
-  HiCalendar, HiHeart, HiOutlineHeart, HiStar, HiHome, HiOfficeBuilding 
+  HiCalendar, HiHeart, HiOutlineHeart, HiStar, HiHome, HiOfficeBuilding,
+  HiShieldCheck, HiClock
 } from 'react-icons/hi';
 import { format } from 'date-fns';
 
@@ -90,10 +91,12 @@ const PropertyCard = ({ property, onDelete, isSaved: initialIsSaved, onSaveToggl
   // Calculate rating (mock data - can be replaced with actual ratings)
   const rating = 4.5;
   const reviewCount = 24;
+  const isAdminCard = typeof onDelete === 'function';
+  const updatedAt = property.updatedAt || property.createdAt;
 
   return (
     <div 
-      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+      className="bg-white rounded-2xl shadow-md ring-1 ring-gray-100 overflow-hidden hover:shadow-2xl hover:ring-blue-100 transition-all duration-300 transform hover:-translate-y-1"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -108,6 +111,7 @@ const PropertyCard = ({ property, onDelete, isSaved: initialIsSaved, onSaveToggl
             e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
           }}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
 
         {/* Save Button Overlay */}
         {onSaveToggle && (
@@ -173,6 +177,10 @@ const PropertyCard = ({ property, onDelete, isSaved: initialIsSaved, onSaveToggl
           <span className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${getStatusColor(property.propertyStatus)}`}>
             {property.propertyStatus === 'active' ? '● Available' : '○ Inactive'}
           </span>
+          <span className="px-2 py-1 rounded-full text-xs font-semibold shadow-sm bg-white/90 text-gray-800 flex items-center gap-1">
+            <HiShieldCheck className="text-emerald-600" />
+            Verified
+          </span>
         </div>
         
         <div className="absolute top-3 right-3 flex gap-2">
@@ -236,6 +244,13 @@ const PropertyCard = ({ property, onDelete, isSaved: initialIsSaved, onSaveToggl
           )}
         </div>
 
+        {updatedAt && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3 bg-gray-50 px-2.5 py-1.5 rounded-lg w-fit">
+            <HiClock className="text-gray-400" />
+            <span>Updated {format(new Date(updatedAt), 'dd MMM yyyy')}</span>
+          </div>
+        )}
+
         {/* Features Grid */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="flex items-center gap-1.5 text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded-lg">
@@ -291,25 +306,30 @@ const PropertyCard = ({ property, onDelete, isSaved: initialIsSaved, onSaveToggl
         <div className="flex justify-between items-center pt-3 border-t border-gray-100">
           <Link
             to={`/properties/${property._id}`}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-all text-sm font-medium mr-2"
+            className={`${isAdminCard ? 'flex-1 mr-2' : 'w-full'} flex items-center justify-center gap-2 px-3 py-2.5 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl hover:opacity-95 transition-all text-sm font-medium`}
           >
             <HiEye className="text-lg" />
-            <span>View</span>
+            <span>View Details</span>
           </Link>
-          <Link
-            to={`/properties/edit/${property._id}`}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all text-sm font-medium mr-2"
-          >
-            <HiPencil className="text-lg" />
-            <span>Edit</span>
-          </Link>
-          <button
-            onClick={() => onDelete(property._id)}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all text-sm font-medium"
-          >
-            <HiTrash className="text-lg" />
-            <span>Delete</span>
-          </button>
+
+          {isAdminCard && (
+            <>
+              <Link
+                to={`/properties/edit/${property._id}`}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all text-sm font-medium mr-2"
+              >
+                <HiPencil className="text-lg" />
+                <span>Edit</span>
+              </Link>
+              <button
+                onClick={() => onDelete(property._id)}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all text-sm font-medium"
+              >
+                <HiTrash className="text-lg" />
+                <span>Delete</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
